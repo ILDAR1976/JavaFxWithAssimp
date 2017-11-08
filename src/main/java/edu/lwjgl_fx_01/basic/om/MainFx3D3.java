@@ -216,17 +216,6 @@ public class MainFx3D3 extends Application {
 			//System.out.println("Quantity: " + boneCount);
 			break;
 		}
-
-		
-	
-				
-/*				.stream().map(v->{
-			Map<Integer, Bone> o = new HashMap();
-			o.put(v.getGlobalId(),v);s
-			return (Map<Integer,Bone>)v;
-		}).collect(Collectors.toMap(null, null));
-*/		
-		
 		switch (3) {
 		case 0:
 			root3D.getChildren().addAll(meshes, figure); 
