@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 public final class FeatureToggle {
 
     private static final BooleanProperty DISPLAY_MESHS_FEATURE = new SimpleBooleanProperty(true);
-    private static final BooleanProperty DISPLAY_SKELETONS_FEATURE = new SimpleBooleanProperty(true);
+    private static final BooleanProperty DISPLAY_SKELETONS_FEATURE = new SimpleBooleanProperty(false);
 
     public static void onDisplayMeshsChange(Consumer<Boolean> consumer) {
         DISPLAY_MESHS_FEATURE.addListener((observable, oldValue, newValue) -> consumer.accept(newValue));

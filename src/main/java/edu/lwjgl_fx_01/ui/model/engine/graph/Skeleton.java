@@ -18,7 +18,7 @@ import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Joint;
 @SuppressWarnings({ "restriction", "unused" })
 public final class Skeleton extends Parent {
 
-    Map<String, Joint> joints = new LinkedHashMap<>();
+    public Map<String, Joint> joints = new LinkedHashMap<>();
     private final Map<String, Affine> bindTransforms = new LinkedHashMap<>();
 
     public Skeleton(final String id) {
@@ -80,7 +80,6 @@ public final class Skeleton extends Parent {
 	public Map<String, Affine> getBindTransforms() {
 		return bindTransforms;
 	}
-
 	
 	public void setJoints(Map<String, Joint> joints) {
 		this.joints = joints;

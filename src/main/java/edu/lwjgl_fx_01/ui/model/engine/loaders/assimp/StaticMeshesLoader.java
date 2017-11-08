@@ -32,16 +32,21 @@ import org.lwjgl.assimp.AIVector3D;
 import org.lwjgl.assimp.Assimp;
 import edu.lwjgl_fx_01.ui.utils.Utils;
 import edu.lwjgl_fx_01.ui.controller.ModelController;
+import edu.lwjgl_fx_01.ui.controller.ModelControllerStore;
 import edu.lwjgl_fx_01.ui.model.engine.LwjglScene;
 import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMaterial;
 import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMesh;
 import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglTexture;
+import edu.lwjgl_fx_01.ui.model.engine.graph.ModelNode;
+import edu.lwjgl_fx_01.ui.model.engine.graph.Skeleton;
 
 public class StaticMeshesLoader {
 	
 	public static LwjglScene mainScene = new LwjglScene();
-	public static ModelController modelController = new ModelController("CONTROLLER");
+	public static ModelControllerStore modelController = new ModelControllerStore("CONTROLLER");
+	public static List<ModelController> Controller = new ArrayList<>();
 	public static List<String> bonesNames = new ArrayList<>();
+	public static Skeleton skeleton = null;
 	
     public static LwjglScene load(String resourcePath, String texturesDir) throws Exception {
         return load(resourcePath, texturesDir,
@@ -147,7 +152,7 @@ public class StaticMeshesLoader {
         float[][] bonesVerteicesWeigth = new float[0][0];
         
         LwjglMesh mesh = new LwjglMesh(Utils.listToArray(vertices), Utils.listToArray(textures),
-                Utils.listToArray(normals), Utils.listIntToArray(indices), bonesVerteicesWeigth);
+                Utils.listToArray(normals), Utils.listIntToArray(indices), bonesVerteicesWeigth, null);
         LwjglMaterial material;
         int materialIdx = aiMesh.mMaterialIndex();
         if (materialIdx >= 0 && materialIdx < materials.size()) {

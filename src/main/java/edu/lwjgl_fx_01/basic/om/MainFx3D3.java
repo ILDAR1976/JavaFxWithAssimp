@@ -63,11 +63,12 @@ import javafx.animation.Interpolator;
 import javafx.beans.value.WritableValue;
 import javafx.geometry.Point3D;
 import javafx.util.Duration;
+import javafx.scene.control.Button;
 
 @SuppressWarnings({ "unused", "restriction"})
-public class MainFx3D1 extends Application {
+public class MainFx3D3 extends Application {
 	private Stage stage;
-	final static Logger logger = LogManager.getLogger(MainFx3D1.class);
+	final static Logger logger = LogManager.getLogger(MainFx3D3.class);
 	private AssimpLoader assimpLoader;
 	private final PerspectiveCamera camera = new PerspectiveCamera(true);
 	private final Rotate cameraXRotate = new Rotate(-30, 0, 0, 0, Rotate.X_AXIS);
@@ -129,7 +130,7 @@ public class MainFx3D1 extends Application {
 		}
 	}
 
-	public MainFx3D1() throws Exception {
+	public MainFx3D3() throws Exception {
 
 		assimpLoader = new AssimpLoader("./models/guard.dae");
 		
@@ -194,13 +195,13 @@ public class MainFx3D1 extends Application {
 		
 		
 		Map<Integer,List<Affine>> affineKeyFramesOnBone =  getFramesFromFileOnBoneList("./source/animation_guard.txt", ihaScene.getMeshes().get(0).getBones());
-		Map<Joint,List<Affine>> affineKeyFramesOnJoint =  getFramesFromFileOnJointList("./source/animation_guard.txt", sFx.getFirst().getSkeletons().get("origin").getJoints());
+		//Map<Joint,List<Affine>> affineKeyFramesOnJoint =  getFramesFromFileOnJointList("./source/animation_guard.txt", sFx.getFirst().getSkeletons().get("origin").getJoints());
 		
-		switch (1) {
+		switch (0) {
 		case 1:
 			ihaScene.getMeshes().forEach((general) -> {
 						meshes.getChildren().add(createSkin(general));
-						System.out.println(">" + general.name);
+						//System.out.println(">" + general.name);
 						int frameCount = 0;
 						boneCount = 0 ;
 						for (int j = 0; j < general.getBones().size(); j++) {
@@ -212,9 +213,7 @@ public class MainFx3D1 extends Application {
 							//System.out.println(boneCount + " " +bone.getBoneName());
 						}
 			});
-
-			
-			System.out.println("Quantity: " + boneCount);
+			//System.out.println("Quantity: " + boneCount);
 			break;
 		}
 
@@ -255,6 +254,7 @@ public class MainFx3D1 extends Application {
 		final Timeline timeline = new Timeline();
 		timeline.getKeyFrames().addAll(keyFrames);
 		timeline.setCycleCount(Timeline.INDEFINITE);
+		assimpLoader.getTimelines().values().forEach(tl -> timeline.getKeyFrames().addAll(tl.getKeyFrames()));
 		timeline.play();
 
 		stage.setScene(scene);
@@ -265,7 +265,16 @@ public class MainFx3D1 extends Application {
 		GLSlider trY = new GLSlider(10d, 100d, "Translate Y:", -1000d, 1000d, -124.3d);
 		GLSlider trZ = new GLSlider(10d, 140d, "Translate Z:", -1000d, 1000d, -201d);
 		GLSlider scl = new GLSlider(10d, 180d, "Scale figure:", 0d, 1.5d, 1.0d);
+		GLSlider dur = new GLSlider(10d, 220d, "Timeline position:  ", 0d, 10000d, 0d);
 
+		Button start = new Button("Start");
+		start.setLayoutX(10d);
+		start.setLayoutY(260d);
+		
+		Button pause = new Button("Pause");
+		pause.setLayoutX(60d);
+		pause.setLayoutY(260d);
+		
 		camera.translateXProperty().bind(trX.getValue());
 		camera.translateYProperty().bind(trY.getValue());
 		camera.translateZProperty().bind(trZ.getValue());
@@ -281,6 +290,25 @@ public class MainFx3D1 extends Application {
 		main.scaleXProperty().bind(scl.getValue());
 		main.scaleYProperty().bind(scl.getValue());
 		main.scaleZProperty().bind(scl.getValue());
+
+		dur.getValue().addListener((e, o, n) -> {
+			timeline.pause();
+			
+			timeline.jumpTo(Duration.millis(n.doubleValue()));
+		});
+
+		start.setOnAction(event -> {
+			timeline.play();
+		});
+
+		pause.setOnAction(event -> {
+			timeline.pause();
+		});
+
+		timeline.currentTimeProperty().addListener((e, o, n) -> {
+			//System.out.println(timeline.getCurrentTime().toMillis());
+			//dur.getValue().set(timeline.getCurrentTime().toMillis());
+		});
 		
 		if (ihaScene.getAnimations().size() > 0) {
 			index = new GLSlider(10d, 20d, "Change element №1:      ", 0,
@@ -298,22 +326,22 @@ public class MainFx3D1 extends Application {
 	
 					break;
 				case 1:
-					Skeleton skln = sFx.getFirst().getSkeletons().get("origin");
+					Skeleton skln = sFx.getFirst().getSkeletons().get("MD5");
 					for (Map.Entry<String, Joint> jnt : skln.getJoints().entrySet()) {
 						int qtyJoints = skln.getJoints().entrySet().size();
 						Matrix4f mat = getTM(jnt.getValue().getId(), n.intValue());
-						Affine af = affineKeyFramesOnJoint.get(jnt.getValue()).get(n.intValue());
+						//Affine af = affineKeyFramesOnJoint.get(jnt.getValue()).get(n.intValue());
 						//System.out.println(" diff: " + (af.getMxx() - adaptedMatrix(mat).getMxx()));
 						jnt.getValue().getTransforms().clear();
-						jnt.getValue().getTransforms().addAll(af);
+						jnt.getValue().getTransforms().addAll(adaptedMatrix(mat));
 					}					
 					break;
 				}
 				index.getValue().set(n.intValue());
 			});
-			grp.getChildren().addAll( index, trX, trY, trZ, scl);
+			grp.getChildren().addAll( index, trX, trY, trZ, scl, dur, start, pause);
 		} else {
-			grp.getChildren().addAll(  trX, trY, trZ, scl);
+			grp.getChildren().addAll(  trX, trY, trZ, scl, dur, start, pause);
 		}
 	}
 

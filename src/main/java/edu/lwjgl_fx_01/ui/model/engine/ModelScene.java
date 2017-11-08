@@ -12,7 +12,7 @@ import java.util.Map;
  * @author Eclion, Iha
  */
 public final class ModelScene extends Group {
-    public final Map<String, Skeleton> skeletons = new HashMap<>();
+    public Map<String, Skeleton> skeletons = new HashMap<>();
 
     public ModelScene(final String id) {
         this.setId(id);
@@ -22,4 +22,14 @@ public final class ModelScene extends Group {
         Utils.getModelNodeChildStream(this).
                 forEach(child -> child.build(buildHelper));
     }
+
+	public Map<String, Skeleton> getSkeletons() {
+		return skeletons;
+	}
+
+	public void setSkeletons(Map<String, Skeleton> skeletons) {
+		this.skeletons = skeletons;
+	}
+    
+    
 }

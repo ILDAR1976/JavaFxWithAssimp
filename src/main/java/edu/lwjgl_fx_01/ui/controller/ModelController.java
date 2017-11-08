@@ -2,9 +2,8 @@ package edu.lwjgl_fx_01.ui.controller;
 
 import javafx.scene.transform.Affine;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Eclion, Iha
@@ -14,10 +13,10 @@ public final class ModelController {
     private final String name;
 
     private String skinId;
-	private Map<Integer, Affine> bindShapeMatrix = new HashMap();
-	private Map<Integer, String[]> jointNames = new HashMap();
-    private Map<Integer, float[][]> vertexWeights = new HashMap();
-    public Map<Integer, List<Affine>> bindPoses = new HashMap();
+    private Affine bindShapeMatrix;
+    private String[] jointNames;
+    private float[][] vertexWeights;
+    public List<Affine> bindPoses = new ArrayList<>();
 
     
     public ModelController(final String name) {
@@ -28,7 +27,7 @@ public final class ModelController {
         return name;
     }
 
-    public String getSkinId() {
+     public String getSkinId() {
         return skinId;
     }
 
@@ -36,33 +35,37 @@ public final class ModelController {
         this.skinId = skinId;
     }
 
-    public Affine getBindShapeMatrix(int meshId) {
-        return bindShapeMatrix.get(meshId);
+    public Affine getBindShapeMatrix() {
+        return bindShapeMatrix;
     }
 
-    public void setBindShapeMatrix(final int meshId, final Affine bindShapeMatrix) {
-        this.bindShapeMatrix.put(meshId, bindShapeMatrix);
+    public void setBindShapeMatrix(final Affine bindShapeMatrix) {
+        this.bindShapeMatrix = bindShapeMatrix;
     }
 
-    public String[] getJointNames(int meshId) {
-        return jointNames.get(meshId);
+    public String[] getJointNames() {
+        return jointNames;
     }
 
-    public void setJointNames(final int meshId, final String[] jointNames) {
-        this.jointNames.put(meshId, jointNames);
+    public void setJointNames(final String[] jointNames) {
+        this.jointNames = jointNames;
     }
 
-    public float[][] getVertexWeights(int meshId) {
-        return vertexWeights.get(meshId);
+    public float[][] getVertexWeights() {
+        return vertexWeights;
     }
 
-    public void setVertexWeights(final int meshId, final float[][] vertexWeights) {
-        this.vertexWeights.put(meshId,vertexWeights);
+    public void setVertexWeights(final float[][] vertexWeights) {
+        this.vertexWeights = vertexWeights;
     }
 
-	public List<Affine> getBindPoses(int meshId) {
-		return bindPoses.get(meshId);
+	public List<Affine> getBindPoses() {
+		return bindPoses;
 	}
 
+	public void setBindPoses(List<Affine> bindPoses) {
+		this.bindPoses = bindPoses;
+	}
+    
     
 }

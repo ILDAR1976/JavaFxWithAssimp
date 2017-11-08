@@ -32,7 +32,6 @@
 package edu.lwjgl_fx_01.ui.model.engine.graph;
 
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Joint;
-import static edu.lwjgl_fx_01.ui.utils.Utils.*;
 import javafx.beans.InvalidationListener;
 import javafx.collections.ObservableFloatArray;
 import javafx.geometry.Point3D;
@@ -51,15 +50,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.joml.Matrix4f;
 
 /**
  * PolygonMesh that knows how to update itself given changes in joint transforms.
  * The mesh can be updated with an AnimationTimer.
- * PolygonMesh, который знает, как обновить себя с учетом изменений в совместных преобразованиях.
- * Сетка может быть обновлена с помощью AnimationTimer.
+ * PolygonMesh, ������� �����, ��� �������� ���� � ������ ��������� � ���������� ���������������.
+�* ����� ����� ���� ��������� � ������� AnimationTimer.
  */
 @SuppressWarnings("restriction")
 public final class SkinningMesh extends TriangleMesh {
@@ -71,7 +67,7 @@ public final class SkinningMesh extends TriangleMesh {
     private boolean jointsTransformDirty = true;
     private Transform bindGlobalInverseTransform;
     private final Transform[] jointToRootTransforms; // the root refers to the group containing all the mesh skinning nodes (i.e. the parent of jointForest)
-    												 // корень относится к группе, содержащей все узлы скинов сетки (т. е. родительский элемент объединенного леса)
+    												 // ������ ��������� � ������, ���������� ��� ���� ������ ����� (�. �. ������������ ������� ������������� ����)
     private final int nPoints;
     private final int nJoints;
 
@@ -86,14 +82,14 @@ public final class SkinningMesh extends TriangleMesh {
      * @param joints              A list of joints used for skinning; the order of these are associated with the respective attributes of @weights and @bindPoses
      * @param jointForest         A list of the top level trees that contain the joints; all the @joints should be contained in this forest
      *
-     * Конструктор SkinningMesh.
-     *
-     * @param mesh Связующая сетка
-     * @param jointsWeights Двумерный массив (nJoints x nPoints) весов влияния, используемых для скининга
-     * @param bindTransforms Преобразование привязки для каждого сустава
-     * @param bindGlobalTransform Глобальное преобразование привязки; все преобразования привязки определяются относительно этого кадра
-     * @param joints Список суставов, используемых для скининга; их порядок связан с соответствующими атрибутами @weights и @bindPoses
-     * @param jointForest Список деревьев верхнего уровня, содержащих суставы; все @joints должны содержаться в этом лесу    
+     * ����������� SkinningMesh.
+�����*
+�����* @param mesh ��������� �����
+�����* @param jointsWeights ��������� ������ (nJoints x nPoints) ����� �������, ������������ ��� ��������
+�����* @param bindTransforms �������������� �������� ��� ������� �������
+�����* @param bindGlobalTransform ���������� �������������� ��������; ��� �������������� �������� ������������ ������������ ����� �����
+�����* @param joints ������ ��������, ������������ ��� ��������; �� ������� ������ � ���������������� ���������� @weights � @bindPoses
+�����* @param jointForest ������ �������� �������� ������, ���������� �������; ��� @joints ������ ����������� � ���� ����    
      */
     public SkinningMesh(final TriangleMesh mesh, final float[][] jointsWeights, final Affine[] bindTransforms,
                         final Affine bindGlobalTransform, final List<Joint> joints, final List<Parent> jointForest) {
@@ -102,7 +98,7 @@ public final class SkinningMesh extends TriangleMesh {
         this.weights = jointsWeights;
 
         this.nJoints = joints.size();
-        this.nPoints = getPoints().size() / getPointElementSize();
+        this.nPoints = getPoints().size() / 3;
 
         this.initializeJointIndexForest(joints, jointForest);
 
@@ -121,22 +117,21 @@ public final class SkinningMesh extends TriangleMesh {
         this.processJoints(joints, jointForest);
 
         jointsTransformDirty = true;
-        
         update();
     }
 
     // Create the jointIndexForest forest. Its structure is the same as jointForest, except that this forest have
     // indices information and some branches are pruned if they don't contain joints.
-    // Создаем лес jointIndexForest. Его структура такая же, как jointforest, за исключением того, что этот лес имеет
-    // информация индексов и некоторые ветви обрезаны, если они не содержат суставов.
+    // ������� ��� jointIndexForest. ��� ��������� ����� ��, ��� jointforest, �� ����������� ����, ��� ���� ��� �����
+    // ���������� �������� � ��������� ����� ��������, ���� ��� �� �������� ��������.
     private void initializeJointIndexForest(final List<Joint> joints, final List<Parent> jointForest) {
         for (final Parent jointRoot : jointForest) {
-        	jointIndexForest.add(new JointIndex(jointRoot, joints.indexOf(jointRoot), joints));
+            jointIndexForest.add(new JointIndex(jointRoot, joints.indexOf(jointRoot), joints));
         }
     }
 
     // For optimization purposes, store the indices of the non-zero weights
-    // Для целей оптимизации храните индексы ненулевых весов
+    // ��� ����� ����������� ������� ������� ��������� �����
     private List<Integer>[] initializeWeightIndices() {
         final List<Integer>[] wIndices = new List[nJoints];
         for (int j = 0; j < nJoints; j++) {
@@ -151,15 +146,16 @@ public final class SkinningMesh extends TriangleMesh {
     }
 
     // Compute the points of the binding mesh relative to the binding transforms
-    // Вычислить точки связующей сетки относительно преобразований привязки
+    // ��������� ����� ��������� ����� ������������ �������������� ��������
     private float[][] initializeRelativePoints(final Affine[] bindTransforms, final Affine bindGlobalTransform) {
         final ObservableFloatArray points = getPoints();
         final float[][] relativePts = new float[nJoints][nPoints * 3];
         for (int j = 0; j < nJoints; j++) {
-            final Transform postBindTransform = bindTransforms[j].createConcatenation(bindGlobalTransform);
+        	
+        	Transform postBindTransform = bindTransforms[j];//.createConcatenation(bindGlobalTransform);
             for (int i = 0; i < nPoints; i++) {
                 final Point3D relativePt = postBindTransform.transform(points.get(3 * i), points.get(3 * i + 1), points.get(3 * i + 2));
-                relativePts[j][3 * i] = (float) relativePt.getX();
+                relativePts[j][3 * i    ] = (float) relativePt.getX();
                 relativePts[j][3 * i + 1] = (float) relativePt.getY();
                 relativePts[j][3 * i + 2] = (float) relativePt.getZ();
             }
@@ -169,9 +165,8 @@ public final class SkinningMesh extends TriangleMesh {
 
     // Add a listener to all the joints (and their parents nodes) so that we can track when any of their transforms have changed
     // Set of joints that already have a listener (so we don't attach a listener to the same node more than once)
-    // Добавляем слушателя ко всем суставам (и их родительским узлам), чтобы мы могли отслеживать, когда какое-либо из их 
-    // преобразований изменилось.
-    // Набор суставов, у которых уже есть слушатель (поэтому мы не подключаем прослушиватель к тому же узлу несколько раз)
+    // ��������� ��������� �� ���� �������� (� �� ������������ �����), ����� �� ����� �����������, ����� �����-���� �� �� �������������� ����������
+    // ����� ��������, � ������� ��� ���� ��������� (������� �� �� ���������� �������������� � ���� �� ���� ��������� ���)
     private void processJoints(final List<Joint> joints, final List<Parent> jointForest) {
         final Set<Node> processedNodes = new HashSet<>(joints.size());
         final InvalidationListener invalidationListener = observable -> jointsTransformDirty = true;
@@ -181,7 +176,7 @@ public final class SkinningMesh extends TriangleMesh {
                 node.localToParentTransformProperty().addListener(invalidationListener);
                 processedNodes.add(node);
                 // Don't check for nodes above the jointForest
-                // Не проверяйте узлы над объединенным лесом
+                // �� ���������� ���� ��� ������������ �����
                 if (jointForest.contains(node) || node.parentProperty().isNull().get()) {
                     break;
                 }
@@ -200,47 +195,19 @@ public final class SkinningMesh extends TriangleMesh {
     }
 
     // Updates the jointToRootTransforms by doing a a depth-first search of the jointIndexForest
-    // Обновляет jointToRootTransforms, выполнив поиск по глубине в jointIndexForest
+    // ��������� jointToRootTransforms, �������� ����� �� ������� � jointIndexForest
     private void updateLocalToGlobalTransforms(final List<JointIndex> jointIndexForest) {
         for (final JointIndex jointIndex : jointIndexForest) {
             if (jointIndex.parent == null) {
                 jointIndex.localToGlobalTransform = bindGlobalInverseTransform.createConcatenation(jointIndex.node.getLocalToParentTransform());
                 //System.out.println("A " + jointIndex.node.getId());
-                //jointIndex.node.getTransforms().clear();
-                
             } else {
                 jointIndex.localToGlobalTransform = jointIndex.parent.localToGlobalTransform.createConcatenation(jointIndex.node.getLocalToParentTransform());
-            	//System.out.println(" B " + jointIndex.node.getId());
-            	//jointIndex.node.getTransforms().clear();
-            	
+                //System.out.println("B " + jointIndex.node.getId());
             }
-            
             if (jointIndex.index != -1) {
-               	
-            	Affine af = new Affine();
-        		
-               	
-               	Transform tr2 = af;
-        		
-              
-               	
-               	Matrix4f mt = new Matrix4f(
-
-               			    1f,    0f,  0f, 0f,
-               				0f,    1f,  0f, 0f,
-               				0f,    0f,  1f, 0f,
-               				0f,    0f,  0f, 1f
-               			
-               			);
-               		
-				tr2 = tr2.createConcatenation(adaptedMatrix(mt));
-				
-               	//jointToRootTransforms[jointIndex.index] = tr2.createConcatenation(jointIndex.localToGlobalTransform);
-            	jointToRootTransforms[jointIndex.index] = jointIndex.localToGlobalTransform;
-               	
-               	
+                jointToRootTransforms[jointIndex.index] = jointIndex.localToGlobalTransform;
             }
-            
             updateLocalToGlobalTransforms(jointIndex.children);
         }
     }
@@ -253,18 +220,15 @@ public final class SkinningMesh extends TriangleMesh {
         }
 
         updateLocalToGlobalTransforms(jointIndexForest);
-        //System.out.println(".");
+
         updatePoints();
         updateNormals();
 
         jointsTransformDirty = false;
     }
 
-    //problem with the point calculation.
-    
-    private void CreateTestMesh() {
-    	
-    }
+
+    //TODO: problem with the point calculation.
     
     private void updatePoints() {
         final float[] points = new float[nPoints * 3];
@@ -274,9 +238,16 @@ public final class SkinningMesh extends TriangleMesh {
             jointToRootTransforms[j].toArray(MatrixType.MT_3D_3x4, t);
             relativePoint = relativePoints[j];
             for (Integer i : weightIndices[j]) {
-  				points[3 * i]     += weights[j][i] * (t[0] * relativePoint[3 * i] + t[1] * relativePoint[3 * i + 1] + t[2]  * relativePoint[3 * i + 2] + t[3]);
+            	//for (int i = 0; i < nPoints; i++) {
+         
+  	    		points[3 * i    ] += weights[j][i] * (t[0] * relativePoint[3 * i] + t[1] * relativePoint[3 * i + 1] + t[2]  * relativePoint[3 * i + 2] + t[3]);
                 points[3 * i + 1] += weights[j][i] * (t[4] * relativePoint[3 * i] + t[5] * relativePoint[3 * i + 1] + t[6]  * relativePoint[3 * i + 2] + t[7]);
                 points[3 * i + 2] += weights[j][i] * (t[8] * relativePoint[3 * i] + t[9] * relativePoint[3 * i + 1] + t[10] * relativePoint[3 * i + 2] + t[11]);
+  /*
+  	    		points[3 * i    ] = relativePoint[3 * i];
+                points[3 * i + 1] = relativePoint[3 * i + 1];
+                points[3 * i + 2] = relativePoint[3 * i + 2];
+ */           	
             }
         }
         this.getPoints().set(0, points, 0, points.length);
@@ -295,7 +266,7 @@ public final class SkinningMesh extends TriangleMesh {
             final int ptIndex3 = faces.get(i * faceSize + pointSize * 2);
 
             // should the normal Index checked to be the same for all the face?
-            // должен ли нормальный индекс быть одинаковым для всех индексов полигонов?
+            // ������ �� ���������� ������ ���� ���������� ��� ���� �������� ���������?
             final int nlIndex = faces.get(i * faceSize + 1);
 
             final Point3D p1 = getPoint(ptIndex1);
@@ -330,16 +301,10 @@ public final class SkinningMesh extends TriangleMesh {
         private final List<JointIndex> children = new ArrayList<>();
         private JointIndex parent;
         private Transform localToGlobalTransform;
-        private Joint joint;
 
         JointIndex(final Node n, final int ind, final List<Joint> orderedJoints) {
             node = n;
             index = ind;
-
-            //System.out.println("node: " + node.getId() + " skin: " + orderedJoints.stream().filter(v -> node.getId().equals(v.getId())).collect(Collectors.toList()));
-            List<Joint> jnt = orderedJoints.stream().filter(v -> node.getId().equals(v.getId())).collect(Collectors.toList());
-            if (jnt.size() == 1 ) joint = jnt.get(0);
-            
             if (!(node instanceof Parent)) {
                 return;
             }
@@ -355,10 +320,5 @@ public final class SkinningMesh extends TriangleMesh {
                             }
                     );
         }
-
-		public Joint getJoint() {
-			return joint;
-		}
-        
     }
 }

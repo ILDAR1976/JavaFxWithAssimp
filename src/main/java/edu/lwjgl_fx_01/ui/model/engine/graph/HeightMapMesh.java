@@ -72,7 +72,7 @@ public class HeightMapMesh {
         float[] textCoordsArr = Utils.listToArray(textCoords);
         float[] normalsArr = calcNormals(posArr, width, height);
         float[][] bonesVerteicesWeigth = new float[0][0];
-        this.mesh = new LwjglMesh(posArr, textCoordsArr, normalsArr, indicesArr, bonesVerteicesWeigth);
+        this.mesh = new LwjglMesh(posArr, textCoordsArr, normalsArr, indicesArr, bonesVerteicesWeigth, null);
         LwjglMaterial material = new LwjglMaterial(texture, 0.0f);
         mesh.setMaterial(material);
     }

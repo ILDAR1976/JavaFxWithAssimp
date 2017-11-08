@@ -29,7 +29,7 @@ import static edu.lwjgl_fx_01.ui.utils.Utils.*;
 import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMesh.ConvertPoints;
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Bone;
 
-public class LwjglMesh<R> {
+public class LwjglMesh {
 
     public static final int MAX_WEIGHTS = 4;
 	public String name;
@@ -81,17 +81,17 @@ public class LwjglMesh<R> {
 	int indexFace3;
 	
 	
-    public LwjglMesh(float[] positions, float[] textCoords, float[] normals, int[] indicies, float[][] bonesVerteicesWeigth) {
-        this(positions, textCoords, normals, indicies, bonesVerteicesWeigth, 0, createEmptyIntArray(MAX_WEIGHTS * positions.length / 3, 0), 
+    public LwjglMesh(float[] positions, float[] textCoords, float[] normals, int[] indicies, float[][] bonesVerteicesWeigth, List<Integer> currnetBone) {
+        this(positions, textCoords, normals, indicies, bonesVerteicesWeigth, currnetBone, createEmptyIntArray(MAX_WEIGHTS * positions.length / 3, 0), 
         	 createEmptyFloatArray(MAX_WEIGHTS * positions.length / 3, 0));
     }
 
-    public LwjglMesh(float[] positions, float[] textCoords, float[] normals, int[] indicies, float[][] bonesVerteicesWeigth, int bonesCount, int[] jointIndices, float[] weights) {
+    public LwjglMesh(float[] positions, float[] textCoords, float[] normals, int[] indicies, float[][] bonesVerteicesWeigth, List<Integer> currentBone, int[] jointIndices, float[] weights) {
          try {
             calculateBoundingRadius(positions);
             
             vertexCount = indicies.length;
-            this.bonesCount = bonesCount;
+            this.bonesCount = currentBone.get(0);
             
             vboIdList = new ArrayList();
 
@@ -313,8 +313,8 @@ public class LwjglMesh<R> {
 		this.faces2Fx = new int[this.indicies.size() * 2];
 		this.faces3Fx = new int[this.indicies.size() * 3];
 		
-		bonesPointsWeigth2Fx = new float[bonesCount + 30 ][(_cp.size() ) / 3 + 1000];
-		bonesPointsWeigth3Fx = new float[bonesCount + 30 ][(_cp.size() ) / 3 + 1000];
+		bonesPointsWeigth2Fx = new float[bonesCount][this.indicies.size() * 2];
+		bonesPointsWeigth3Fx = new float[bonesCount][this.indicies.size() * 3];
 
 		indicies.forEach(v -> {
 			_cp.stream().filter((o) -> v.equals(o.oldIndex)).forEach(i -> {

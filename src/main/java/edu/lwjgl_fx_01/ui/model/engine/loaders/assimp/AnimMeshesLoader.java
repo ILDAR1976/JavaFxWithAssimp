@@ -10,9 +10,11 @@ import static org.lwjgl.assimp.Assimp.aiProcess_Triangulate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -53,13 +55,18 @@ import edu.lwjgl_fx_01.ui.model.engine.graph.Skeleton;
 import static edu.lwjgl_fx_01.ui.utils.Utils.*;
 import edu.lwjgl_fx_01.ui.model.engine.graph.anim.AnimatedFrame;
 import edu.lwjgl_fx_01.ui.model.engine.graph.anim.Animation;
+import edu.lwjgl_fx_01.ui.model.engine.graph.anim.ModelAnimation;
 import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Affine;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 
 @SuppressWarnings({ "unchecked", "rawtypes", "unused", "restriction" })
 public class AnimMeshesLoader extends StaticMeshesLoader {
 	private static final LinkedList<ModelScene> scenesFx = new LinkedList<>();
 	private static final LinkedList<ModelNode> nodesFx = new LinkedList<>();
+	private static final Map<String,ModelNode> nodesFxMap = new HashMap();
+	private final static Map<String, Timeline> timelines = new HashMap<>();
 	
 	private static final ModelNode modelNode = new ModelNode("1", "CONTROLLER", "CONTROLLER");
 	
@@ -75,6 +82,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 
         double timeOfFrame = 0;
         List<Double> timeOfFrames = new ArrayList<>();
+        List<Float> timeOfFramesFloat = new ArrayList<>();
         
         for (int i = 0; i < numFrames; i++) {
         	timeOfFrame = 0;
@@ -101,8 +109,14 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
             node.addTransformation(transfMat);
             
             nodeFx.addTransformation(transfMat);
+
+            nodeFx.addTransformationA(adaptedMatrix(transfMat));
+
+            nodeFx.setTimeOfFrames(timeOfFramesFloat);
             
             timeOfFrames.add(timeOfFrame);
+            timeOfFramesFloat.add((float)timeOfFrame);
+            
         }
         
         node.setTimeOfFrames(timeOfFrames);
@@ -143,10 +157,11 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
         LwjglMesh[] meshes = new LwjglMesh[numMeshes];
         List<LwjglMesh> mainMeshes = new ArrayList<>();
  
-
+        int glId = 0;
+        
         for (int i = 0; i < numMeshes; i++) {
             AIMesh aiMesh = AIMesh.create(aiMeshes.get(i));
-            LwjglMesh mesh = processMesh(aiMesh, materials, boneList, i);
+            LwjglMesh mesh = processMesh(aiMesh, materials, boneList, i, glId);
             meshes[i] = mesh;
             mainMeshes.add(mesh);
             
@@ -163,52 +178,78 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
             if (mesh.getTextureCoordianatesFx().length % meshFx.getTexCoordElementSize() != 0 && 
             		(mesh.getTextureCoordianatesFx().length != 0))
             	meshFx.getTexCoords().addAll(0);
-            System.out.println("faces.size: " + meshFx.getFaces().size() + 
+            
+ /*  
+           System.out.println("faces.size: " + meshFx.getFaces().size() + 
         	       " faceSize: " + meshFx.getFaceElementSize() + 
         	       " points: " + meshFx.getPoints().size() +
         	       " pointSize: " + meshFx.getPointElementSize() +
         	       " normals: " + meshFx.getNormals().size() +
         	       " texCoords: " + meshFx.getTexCoords().size());
-
+*/
             meshesList.add(meshFx);
+            List<TriangleMesh> tml = new ArrayList<>();
+            tml.add(meshFx);
+            meshesMap.put(aiMesh.mName().dataString().trim(), tml);
         }
-        meshesMap.put("Meshes", meshesList);
+        
         modelController.setSkinId("Meshes");
         
         mainScene.setMeshes(mainMeshes);
+        
+        ModelScene rootNodeFx = new ModelScene("MainScene");
+        
         AINode aiRootNode = aiScene.mRootNode();
         Matrix4f rootTransfromation = AnimMeshesLoader.toMatrix(aiRootNode.mTransformation());
         
         Nodes nodes = processNodesHierarchy(aiRootNode, null, null);
         
         LwjglNode rootNode = nodes.lwjglNode; 
-        ModelNode rootNodeFx = nodes.modelNode;
+        ModelNode rootNodeSubFx = nodes.modelNode;
         
         mainScene.setRootNode(rootNode);
-        Map<String, Animation> animations = processAnimations(aiScene, boneList, rootNode, rootNodeFx, rootTransfromation);
+        Map<String, Animation> animations = processAnimations(aiScene, boneList, rootNode, rootNodeSubFx, rootTransfromation);
         mainScene.setAnimations(animations);
         
-        scenesFx.add(new ModelScene("MainScene"));
+        
+        scenesFx.add(rootNodeFx);
         
         modelNode.setInstanceControllerId("CONTROLLER");
         
-        buildSkeletonIfChildrenHaveJoints(rootNodeFx);
-        
+        buildSkeletonIfChildrenHaveJoints(rootNodeSubFx);
+
+        rootNodeFx.getChildren().setAll(rootNodeSubFx.getChildren());
+
+         
         List<Skeleton> sk = scenesFx.get(0).skeletons.values().stream()
         		                    .map(skeleton->(Skeleton) skeleton)
         		                    .collect(Collectors.toList());
+        
         skeletonsMap.put("CONTROLLER", sk.get(0));
         
-        controllerMap.put("CONTROLLER", modelController); //setup model controller here
+        skeleton = sk.get(0);
+        
+        buildTimelines(skeleton);
+        
+        for (int i = 0; i < meshesList.size(); i++) {
+        	ModelController mc = new ModelController("CONTROLLER");
+        	mc.setSkinId(mainMeshes.get(i).getName());
+        	mc.setBindShapeMatrix(modelController.getBindShapeMatrix(i));
+        	mc.setBindPoses(modelController.getBindPoses(i));
+        	mc.setJointNames(modelController.getJointNames(i));
+        	mc.setVertexWeights(modelController.getVertexWeights(i));
+        	controllerMap.put(mainMeshes.get(i).getName(), mc); 
+		}
         
         buildHelper.withControllers(controllerMap);
         buildHelper.withMeshes(meshesMap);
         buildHelper.withSkeletons(skeletonsMap);
-        
-        modelNode.buildController(buildHelper);
-        modelNode.buildSkeleton(buildHelper);
 
+        
+        rootNodeFx.build(buildHelper);
+        
         mainScene.setBuilder(buildHelper);
+        
         return mainScene;
     }
     
@@ -231,7 +272,11 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
                 Bone bone = boneList.get(j);
                 LwjglNode node = rootNode.findByName(bone.getBoneName());
                 ModelNode nodeFx = rootNodeFx.findByName(bone.getBoneName());
+                //Matrix4f boneMatrix = LwjglNode.getParentTransforms(node, i);
+                //boneMatrix.mul(bone.getOffsetMatrix());
+                //boneMatrix = new Matrix4f(rootTransformation).mul(boneMatrix);
                 Matrix4f boneMatrix = new Matrix4f(nodeFx.getTransformations().get(i));
+                
                 frame.setMatrix(j, boneMatrix);
                 node.setAffine(adaptedMatrix(bone.getOffsetMatrix()));
              }
@@ -273,7 +318,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
     }
 
     private static void processBones(AIMesh aiMesh, List<Bone> boneList, List<Integer> boneIds,
-            List<Float> weights, int meshId, int countIndices) {
+            List<Float> weights, int meshId, int countIndices, int glId, List<Integer> currentBone) {
         Map<Integer, List<VertexWeight>> weightSet = new HashMap<>();
         int numBones = aiMesh.mNumBones();
         PointerBuffer aiBones = aiMesh.mBones();
@@ -293,21 +338,21 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
         }    
              
         int numVertices = aiMesh.mNumVertices();
-        //bonesVerteicesWeigth = new float[numBones + 100][numVertices + 100];
-        
+        currentBone.clear();
+        currentBone.add(numBones);
         
         for (int i = 0; i < numBones; i++) {
             AIBone aiBone = AIBone.create(aiBones.get(i));
             //int id = boneList.size();
+            //int id = glId++;
             int id = i;
             Bone bone = new Bone(id, aiBone.mName().dataString().trim(), toMatrix(aiBone.mOffsetMatrix()));
-            bone.setGlobalId(i + meshId*1000000);
+            bone.setGlobalId(i + meshId * 1000000);
             bone.setMeshId(meshId);
             boneList.add(bone);
             bonesNames.add(aiBone.mName().dataString().trim());
             //System.out.println(i + " " + bone.getBoneName());
-            
-            
+             
            	if (bindPosMap.get(bone.getMeshId()) != null) {
            		bindPosList = bindPosMap.get(bone.getMeshId());
            		Matrix4f job = bone.getOffsetMatrix();
@@ -334,6 +379,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
                 AIVertexWeight aiWeight = aiWeights.get(j);
                 VertexWeight vw = new VertexWeight(bone.getBoneId(), aiWeight.mVertexId(),
                         aiWeight.mWeight());
+                
                 List<VertexWeight> vertexWeightList = weightSet.get(vw.getVertexId());
                 if (vertexWeightList == null) {
                     vertexWeightList = new ArrayList<>();
@@ -354,7 +400,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
         int maxBoneDimSize = 0;
         
         List<Integer> verticeId = new ArrayList<>();
-        bonesVerteicesWeigth = new float[numBones + 100][numVertices + 100];
+        bonesVerteicesWeigth = new float[numBones][numVertices];
      
         for (int i = 0; i < numVertices; i++) {
             List<VertexWeight> vertexWeightList = weightSet.get(i);
@@ -365,7 +411,6 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
                     weights.add(vw.getWeight());
                     boneIds.add(vw.getBoneId());
                     verticeId.add(i);
-                    bonesVerteicesWeigth[vw.getBoneId()][i] = vw.getWeight();
                     if (maxBoneDimSize < vw.getBoneId()) maxBoneDimSize = vw.getBoneId(); 
                 } else {
                     weights.add(0.0f);
@@ -375,31 +420,38 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
         }
         
         maxBoneDimSize++;
-         
+        Set<Integer> ubone = new HashSet<>(); 
+        
         for (Map.Entry<Integer, List<VertexWeight>> item : weightSet.entrySet()) {
         	for (VertexWeight itemVW : item.getValue()) {
         		bonesVerteicesWeigth[itemVW.getBoneId()][itemVW.getVertexId()] = itemVW.getWeight();
+        		if (itemVW.getBoneId()>=numBones ) System.out.println(itemVW.getBoneId());
+        		ubone.add(itemVW.getBoneId());
         	}
         }
-     }
+        
+/*        ubone.forEach(v -> {
+        	System.out.println(v);
+        });
+*/     }
 
-    private static LwjglMesh processMesh(AIMesh aiMesh, List<LwjglMaterial> materials, List<Bone> boneList, int meshId) {
+    private static LwjglMesh processMesh(AIMesh aiMesh, List<LwjglMaterial> materials, List<Bone> boneList, int meshId, int glId) {
         List<Float> vertices = new ArrayList<>();
         List<Float> textures = new ArrayList<>();
         List<Float> normals = new ArrayList<>();
         List<Integer> indices = new ArrayList<>();
         List<Integer> boneIds = new ArrayList<>();
         List<Float> weights = new ArrayList<>();
-        
+        List<Integer> currentBone = new ArrayList<>();
         
         processVertices(aiMesh, vertices);
         processNormals(aiMesh, normals);
         processTextCoords(aiMesh, textures);
         processIndices(aiMesh, indices);
-        processBones(aiMesh, boneList, boneIds, weights, meshId, indices.size());
+        processBones(aiMesh, boneList, boneIds, weights, meshId, indices.size(), glId, currentBone);
 
         LwjglMesh mesh = new LwjglMesh(Utils.listToArray(vertices), Utils.listToArray(textures),
-                Utils.listToArray(normals), Utils.listIntToArray(indices), bonesVerteicesWeigth, boneList.size(),
+                Utils.listToArray(normals), Utils.listIntToArray(indices), bonesVerteicesWeigth, currentBone,
                 Utils.listIntToArray(boneIds), Utils.listToArray(weights));
         LwjglMaterial material;
         
@@ -422,9 +474,11 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
         
         final String tJoint = "";
         
+       
         List<String> boneName = bonesNames.stream().filter(val -> nodeName.equals(val)).collect(Collectors.toList());    
+        if ("origin".equals(nodeName)) boneName.add("origin");
         List<Bone> bone = boneList.stream().filter(val -> nodeName.equals(val.getBoneName())).collect(Collectors.toList());    
-  
+        
         LwjglNode node = new LwjglNode(nodeName.trim(), parentNode);
         
         ModelNode nodeFx = new ModelNode(
@@ -434,16 +488,22 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
         
         //Setup begin matrix here for joints
         nodeFx.setAffine(adaptedMatrix(toMatrix(aiNode.mTransformation())));
-        nodeFx.getTransforms().add(adaptedMatrix(toMatrix(aiNode.mTransformation())));
         nodeFx.setEtaloneTransform(toMatrix(aiNode.mTransformation()));
- 
-        if (bone.size() != 0) nodeFx.setGlobalId(bone.get(0).getGlobalId());
         
-        if (aiNode.mNumMeshes() > 0) nodeFx.setInstanceControllerId(nodeName + "_skin");
+        if (bone.size() != 0) {
+        	nodeFx.setGlobalId(bone.get(0).getGlobalId());
+        	nodeFx.getTransforms().add(adaptedMatrix(toMatrix(aiNode.mTransformation())));
+        	
+        } else {
+        	nodeFx.getTransforms().add(adaptedMatrix(toMatrix(aiNode.mTransformation())));
+        }
+        
+        if (aiNode.mNumMeshes() > 0) nodeFx.setInstanceControllerId(nodeName);
         
         Nodes outNode = new Nodes(node, nodeFx);
         
         nodesFx.push(nodeFx);
+        nodesFxMap.put(nodeFx.getId(), nodeFx);
         
         int numChildren = aiNode.mNumChildren();
         PointerBuffer aiChildren = aiNode.mChildren();
@@ -499,6 +559,32 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
         }
     }
 
+ 	public static Map<String, List<KeyFrame>> getKeyFramesMap(Skeleton skeleton) {
+ 		final Map<String, List<KeyFrame>> frames = new HashMap<>();
+  		
+ 		skeleton.getJoints().entrySet().stream().map((map) -> {
+ 			ModelAnimation animation = new ModelAnimation(map.getKey());
+ 			ModelNode nodeFx = nodesFxMap.get(map.getKey());
+ 			
+ 			animation.setOutput(AffineListToDouble(nodeFx.getTransformationsA()));
+ 			animation.setInput(listToArray(nodeFx.getTimeOfFrames()));
+ 			
+ 			animation.setTarget(map.getKey());
+ 			return animation;
+ 		}).forEach(animation -> frames.put(animation.id, animation.calculateAnimation(skeleton)));
+ 		
+ 		return frames;
+ 	}
+
+    public static void buildTimelines(Skeleton skeleton) {
+        getKeyFramesMap(skeleton).forEach((key, value) -> {
+            if (!timelines.containsKey(key)) {
+                timelines.put(key, new Timeline());
+            }
+            timelines.get(key).getKeyFrames().addAll(value);
+        });
+    }
+    
  	public static LinkedList<ModelScene> getScenesfx() {
 		return scenesFx;
 	}
@@ -531,5 +617,10 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 
 	public static int getQtyBones() {
 		return boneList.size();
+	}
+
+	
+	public Map<String, Timeline> getTimelines() {
+		return timelines;
 	}
 }

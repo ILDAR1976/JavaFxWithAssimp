@@ -9,10 +9,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -26,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -61,6 +64,7 @@ import javafx.scene.shape.VertexFormat;
 import javafx.scene.transform.Affine;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
+import javafx.scene.transform.*;
 
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -302,6 +306,15 @@ public class Utils {
 			floatArr[i] = list.get(i);
 		}
 		return floatArr;
+	}
+
+	public static double[] listToArrayDouble(List<Double> list) {
+		int size = list != null ? list.size() : 0;
+		double[] doubleArr = new double[size];
+		for (int i = 0; i < size; i++) {
+			doubleArr[i] = list.get(i);
+		}
+		return doubleArr;
 	}
 
 	public static List<Vector3f> getVector3fListFromFloatArray(float[] inp) {
@@ -749,5 +762,57 @@ public class Utils {
 	public static float toSFN(float inp) {
 		String job = String.format("%.10e", inp);
 		return Float.parseFloat(job.replace(',', '.'));
+	}
+
+	public static String read(String fileName) {
+        StringBuilder sb = new StringBuilder();
+        try {
+          BufferedReader in= new BufferedReader(new FileReader(
+            new File(fileName).getAbsoluteFile()));
+          try {
+            String s;
+            while((s = in.readLine()) != null) {
+              sb.append(s);
+              sb.append("\n");
+            }
+          } finally {
+            in.close();
+          }
+        } catch(IOException e) {
+          throw new RuntimeException(e);
+        }
+        return sb.toString();
+      }
+      // Write a single file in one method call:
+    
+	public static void write(String fileName, String text) {
+        try {
+          PrintWriter out = new PrintWriter(
+            new File(fileName).getAbsoluteFile());
+          try {
+            out.print(text);
+          } finally {
+            out.close();
+          }
+        } catch(IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+
+	@SuppressWarnings("unchecked")
+	public static double[] AffineListToDouble(List<Affine> inputList) {
+		double[] out = new double[inputList.size() * 16];
+		
+		List<double[]> job = (List<double[]>) inputList.stream().map(v -> (double[])v.toArray(MatrixType.MT_3D_4x4)).collect(Collectors.toList());
+		
+		int index = 0;
+		
+		for (double[] dm : job) {
+			for (int i = 0; i < dm.length; i++) {
+				out[index++] = dm[i];
+			}
+		}
+		
+		return out;
 	}
 }

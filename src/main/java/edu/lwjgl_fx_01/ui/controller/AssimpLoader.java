@@ -15,6 +15,7 @@ import edu.lwjgl_fx_01.ui.model.engine.ModelScene;
 import edu.lwjgl_fx_01.ui.model.engine.graph.ModelNode;
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.AnimMeshesLoader;
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.StaticMeshesLoader;
+import javafx.animation.Timeline;
 
 import java.io.File;
 import java.nio.IntBuffer;
@@ -169,6 +170,9 @@ public class AssimpLoader {
 	public int getQtyBones() {
 		return model2.getQtyBones();
 	}
-	//inner classes
   
+	public Map<String, Timeline> getTimelines() {
+		return model2.getTimelines();
+	}
+
 }

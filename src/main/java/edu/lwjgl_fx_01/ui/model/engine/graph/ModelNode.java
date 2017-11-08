@@ -36,7 +36,10 @@ public final class ModelNode extends Group {
 	private String instanceId;
 	private Affine affine;
 	private List<Matrix4f> transformations = new ArrayList<>();
+	private List<Affine> transformationsA = new ArrayList<>();
+
 	private Matrix4f EtaloneTransform;
+	private List<Float> timeOfFrames = new ArrayList<>();
 	
 	private enum Category {
 		CAMERA, GEOMETRY, CONTROLLER, LIGHT, NONE
@@ -121,7 +124,7 @@ public final class ModelNode extends Group {
 	}
 
 	public void buildController(final BuildHelper buildHelper) {
-		final ModelController controller = buildHelper.getController(instanceId);
+		final ModelController controller = buildHelper.getController(instanceId.replace("_", "."));
 
 		final Skeleton skeleton = buildHelper.getSkeleton(controller.getName());
 
@@ -136,14 +139,14 @@ public final class ModelNode extends Group {
 
 		for (int i = 0; i < meshes.size(); i++) {
 		//for (int i = 0; i < 1; i++) {
-			jointNames = controller.getJointNames(i);
+			jointNames = controller.getJointNames();
 			joints = Stream.of(jointNames).map(skeleton.joints::get).collect(Collectors.toList());
-			bindTransforms = controller.getBindPoses(i).toArray(new Affine[joints.size()]);
+			bindTransforms = controller.getBindPoses().toArray(new Affine[joints.size()]);
 
 			meshes.get(i).setVertexFormat(VertexFormat.POINT_NORMAL_TEXCOORD);
 
-			final SkinningMesh skinningMesh = new SkinningMesh(meshes.get(i), controller.getVertexWeights(i),
-					bindTransforms, controller.getBindShapeMatrix(i), joints, Arrays.asList(skeleton));
+			final SkinningMesh skinningMesh = new SkinningMesh(meshes.get(i), controller.getVertexWeights(),
+					bindTransforms, controller.getBindShapeMatrix(), joints, Arrays.asList(skeleton));
 
 			final MeshView meshView = new MeshView(skinningMesh);
 
@@ -177,7 +180,7 @@ public final class ModelNode extends Group {
 
 	public void buildSkeleton(final BuildHelper buildHelper) {
 
-		final ModelController controller = buildHelper.getController(instanceId);
+		final ModelController controller = buildHelper.getController(instanceId.replace("_", "."));
 
 		final Skeleton skeleton = buildHelper.getSkeleton(controller.getName());
 
@@ -237,6 +240,26 @@ public final class ModelNode extends Group {
 
 	public void addTransformation(Matrix4f transformation) {
 		transformations.add(transformation);
+	}
+
+	public void setTransformationsA(List<Affine> transformations) {
+		this.transformationsA = transformations;
+	}
+
+	public void addTransformationA(Affine transformation) {
+		transformationsA.add(transformation);
+	}
+
+	public List<Affine> getTransformationsA() {
+		return transformationsA;
+	}
+	
+	public List<Float> getTimeOfFrames() {
+		return timeOfFrames;
+	}
+
+	public void setTimeOfFrames(List<Float> timeOfFrames) {
+		this.timeOfFrames = timeOfFrames;
 	}
 
 	public ModelNode findByName(String targetName) {
