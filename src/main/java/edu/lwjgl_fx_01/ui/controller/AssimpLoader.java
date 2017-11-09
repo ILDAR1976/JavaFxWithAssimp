@@ -175,4 +175,12 @@ public class AssimpLoader {
 		return model2.getTimelines();
 	}
 
+	public void setTimeQuantum(float time) {
+		model2.setTimeQuantum(time);
+	}
+
+	public float getTimeQuantum() {
+		return model2.getTimeQuantum();
+	}
+
 }

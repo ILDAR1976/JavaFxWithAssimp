@@ -25,11 +25,10 @@ import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.LwjglNode;
 import edu.lwjgl_fx_01.ui.utils.Utils;
 
 /**
- * @author Eclion
+ * @author Eclion, Iha
  */
 @SuppressWarnings("restriction")
 public final class ModelNode extends Group {
-	private int globalId;
 	public final String name;
 	public final String type;
 	private Category instanceCategory = Category.NONE;
@@ -37,8 +36,7 @@ public final class ModelNode extends Group {
 	private Affine affine;
 	private List<Matrix4f> transformations = new ArrayList<>();
 	private List<Affine> transformationsA = new ArrayList<>();
-
-	private Matrix4f EtaloneTransform;
+	private List<ModelNode> meshes = new ArrayList<>();
 	private List<Float> timeOfFrames = new ArrayList<>();
 	
 	private enum Category {
@@ -124,8 +122,7 @@ public final class ModelNode extends Group {
 	}
 
 	public void buildController(final BuildHelper buildHelper) {
-		final ModelController controller = buildHelper.getController(instanceId.replace("_", "."));
-
+		final ModelController controller = buildHelper.getController(instanceId);
 		final Skeleton skeleton = buildHelper.getSkeleton(controller.getName());
 
 		String[] jointNames = null;
@@ -138,7 +135,6 @@ public final class ModelNode extends Group {
 		final List<Material> materials = buildHelper.getMaterials(controller.getSkinId());
 
 		for (int i = 0; i < meshes.size(); i++) {
-		//for (int i = 0; i < 1; i++) {
 			jointNames = controller.getJointNames();
 			joints = Stream.of(jointNames).map(skeleton.joints::get).collect(Collectors.toList());
 			bindTransforms = controller.getBindPoses().toArray(new Affine[joints.size()]);
@@ -180,13 +176,14 @@ public final class ModelNode extends Group {
 
 	public void buildSkeleton(final BuildHelper buildHelper) {
 
-		final ModelController controller = buildHelper.getController(instanceId.replace("_", "."));
+		final ModelController controller = buildHelper.getController(instanceId);
 
 		final Skeleton skeleton = buildHelper.getSkeleton(controller.getName());
 
 		final List<Joint> joints = new ArrayList<>(skeleton.joints.values());
 
 		joints.forEach(Joint::addMeshView);
+		
 		getChildren().add(skeleton);
 	}
 
@@ -220,14 +217,6 @@ public final class ModelNode extends Group {
 
 	public void setAffine(Affine affine) {
 		this.affine = affine;
-	}
-
-	public int getGlobalId() {
-		return globalId;
-	}
-
-	public void setGlobalId(int globalId) {
-		this.globalId = globalId;
 	}
 
 	public List<Matrix4f> getTransformations() {
@@ -276,13 +265,17 @@ public final class ModelNode extends Group {
 		}
 		return result;
 	}
-
-	public Matrix4f getEtaloneTransform() {
-		return EtaloneTransform;
+	
+	public List<ModelNode> getMeshes() {
+		return meshes;
 	}
 
-	public void setEtaloneTransform(Matrix4f etaloneTransform) {
-		EtaloneTransform = etaloneTransform;
+	public void setMeshes(List<ModelNode> meshes) {
+		this.meshes = meshes;
 	}
 
+	public void add(ModelNode mesh) {
+		this.meshes.add(mesh);
+	}
+	
 }

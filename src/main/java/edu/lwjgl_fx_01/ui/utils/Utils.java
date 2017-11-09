@@ -51,6 +51,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.WritableValue;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -80,7 +81,13 @@ public class Utils {
     private static final int TIMER_MS_RATIO = 1000;
 	private static final Vector3f VECTOR_MINUS_ONE = new Vector3f(-1.0f, -1.0f, -1.0f);
 	private static final Vector3f VECTOR_PLUS_ONE = new Vector3f(1.0f, 1.0f, 1.0f);
-
+	
+	//counters
+	
+	public static int counter = 0;
+	private static int countJoint = 0;
+	
+	
 	/**
 	 * Write the vertices (position and normal) of an axis-aligned unit box into the
 	 * provided {@link FloatBuffer}.
@@ -815,4 +822,16 @@ public class Utils {
 		
 		return out;
 	}
+	
+	public static void printJoints(ModelNode inp) {
+		
+		if (inp.isJoint()) {
+			System.out.println("node: "  + (++countJoint) + ". " + inp.name);
+		}
+		
+		for (Node item : inp.getChildren()) {
+			printJoints((ModelNode)item);
+		}
+	}
+
 }

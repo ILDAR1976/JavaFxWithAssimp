@@ -78,7 +78,8 @@ public class MainFx3D3 extends Application {
 	private final Rotate cameraLookXRotate = new Rotate(0, 0, 0, 0, Rotate.X_AXIS);
 	private final Rotate cameraLookZRotate = new Rotate(0, 0, 0, 0, Rotate.Z_AXIS);
 	private final Translate cameraPosition = new Translate(0, 0, -10);
-
+	private final DoubleProperty tempo = new SimpleDoubleProperty(100);
+    
 	public Affine affine = new Affine();
 	public Scale scale = new Scale();
 	public Translate translate = new Translate();
@@ -132,8 +133,8 @@ public class MainFx3D3 extends Application {
 
 	public MainFx3D3() throws Exception {
 
-		assimpLoader = new AssimpLoader("./models/guard.dae");
-		
+		assimpLoader = new AssimpLoader("./models/boblamp.md5mesh");
+		//assimpLoader = new AssimpLoader("./models/monster.md5mesh");
 		loadedScene = assimpLoader.getScene();
 		sFx = assimpLoader.getSceneFx();
 
@@ -192,11 +193,6 @@ public class MainFx3D3 extends Application {
 		main = sFx.getLast().skeletons.values().iterator().next();
 		node = ihaScene.getRootNode();
 		
-		
-		
-		Map<Integer,List<Affine>> affineKeyFramesOnBone =  getFramesFromFileOnBoneList("./source/animation_guard.txt", ihaScene.getMeshes().get(0).getBones());
-		//Map<Joint,List<Affine>> affineKeyFramesOnJoint =  getFramesFromFileOnJointList("./source/animation_guard.txt", sFx.getFirst().getSkeletons().get("origin").getJoints());
-		
 		switch (0) {
 		case 1:
 			ihaScene.getMeshes().forEach((general) -> {
@@ -253,20 +249,23 @@ public class MainFx3D3 extends Application {
 		GLSlider trX = new GLSlider(10d, 60d, "Translate X:", -1000d, 1000d, 2.7d);
 		GLSlider trY = new GLSlider(10d, 100d, "Translate Y:", -1000d, 1000d, -124.3d);
 		GLSlider trZ = new GLSlider(10d, 140d, "Translate Z:", -1000d, 1000d, -201d);
-		GLSlider scl = new GLSlider(10d, 180d, "Scale figure:", 0d, 1.5d, 1.0d);
-		GLSlider dur = new GLSlider(10d, 220d, "Timeline position:  ", 0d, 10000d, 0d);
+		GLSlider scl = new GLSlider(10d, 180d, "Scale figure:", 0d, 1000.5d, 1.0d);
+		GLSlider dur = new GLSlider(10d, 220d, "Timeline position:  ", 0d, timeline.getCycleDuration().toMillis(), 0d);
+		GLSlider tq = new GLSlider(10d, 260d, "Time quatum:   ", 0d, 200d, 25d);
 
 		Button start = new Button("Start");
 		start.setLayoutX(10d);
-		start.setLayoutY(260d);
+		start.setLayoutY(300d);
 		
 		Button pause = new Button("Pause");
 		pause.setLayoutX(60d);
-		pause.setLayoutY(260d);
+		pause.setLayoutY(300d);
 		
 		camera.translateXProperty().bind(trX.getValue());
 		camera.translateYProperty().bind(trY.getValue());
 		camera.translateZProperty().bind(trZ.getValue());
+		
+		timeline.rateProperty().bind(tq.getValue());
 
 		figure.scaleXProperty().bind(scl.getValue());
 		figure.scaleYProperty().bind(scl.getValue());
@@ -281,11 +280,19 @@ public class MainFx3D3 extends Application {
 		main.scaleZProperty().bind(scl.getValue());
 
 		dur.getValue().addListener((e, o, n) -> {
-			timeline.pause();
+			//timeline.pause();
 			
 			timeline.jumpTo(Duration.millis(n.doubleValue()));
 		});
 
+		tq.getValue().addListener((e, o, n) -> {
+			assimpLoader.setTimeQuantum(n.floatValue());
+		});
+		
+		timeline.currentTimeProperty().addListener((e, o, n) -> {
+			dur.getValue().set(n.toMillis());
+		});
+		
 		start.setOnAction(event -> {
 			timeline.play();
 		});
@@ -294,13 +301,9 @@ public class MainFx3D3 extends Application {
 			timeline.pause();
 		});
 
-		timeline.currentTimeProperty().addListener((e, o, n) -> {
-			//System.out.println(timeline.getCurrentTime().toMillis());
-			//dur.getValue().set(timeline.getCurrentTime().toMillis());
-		});
 		
 		if (ihaScene.getAnimations().size() > 0) {
-			index = new GLSlider(10d, 20d, "Change element №1:      ", 0,
+	/*		index = new GLSlider(10d, 20d, "Change element №1:      ", 0,
 					ihaScene.getAnimations().get("").getFrames().size() - 1, 0);
 
 			index.getValue().addListener((e, o, n) -> {
@@ -329,8 +332,10 @@ public class MainFx3D3 extends Application {
 				index.getValue().set(n.intValue());
 			});
 			grp.getChildren().addAll( index, trX, trY, trZ, scl, dur, start, pause);
+		*/
+			grp.getChildren().addAll( trX, trY, trZ, scl, dur, start, pause, tq);
 		} else {
-			grp.getChildren().addAll(  trX, trY, trZ, scl, dur, start, pause);
+			grp.getChildren().addAll(  trX, trY, trZ, scl, dur, start, pause, tq);
 		}
 	}
 

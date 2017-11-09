@@ -200,7 +200,6 @@ public class MainFx3D1 extends Application {
 		case 1:
 			ihaScene.getMeshes().forEach((general) -> {
 						meshes.getChildren().add(createSkin(general));
-						System.out.println(">" + general.name);
 						int frameCount = 0;
 						boneCount = 0 ;
 						for (int j = 0; j < general.getBones().size(); j++) {
