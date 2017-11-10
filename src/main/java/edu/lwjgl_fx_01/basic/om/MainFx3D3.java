@@ -163,9 +163,9 @@ public class MainFx3D3 extends Application {
 		myDialog.setScene(scene2);
 		myDialog.show();
 
-		//scene.setFill(Color.TRANSPARENT);
-		//stage.initStyle(StageStyle.TRANSPARENT);
-		scene.setFill(Color.BLACK);
+		scene.setFill(Color.TRANSPARENT);
+		stage.initStyle(StageStyle.TRANSPARENT);
+		scene.setFill(Color.TRANSPARENT);
 		
 		camera.getTransforms().addAll(cameraXRotate, cameraYRotate, cameraPosition, cameraLookXRotate,
 				cameraLookZRotate);
@@ -249,7 +249,7 @@ public class MainFx3D3 extends Application {
 		GLSlider trX = new GLSlider(10d, 60d, "Translate X:", -1000d, 1000d, 2.7d);
 		GLSlider trY = new GLSlider(10d, 100d, "Translate Y:", -1000d, 1000d, -124.3d);
 		GLSlider trZ = new GLSlider(10d, 140d, "Translate Z:", -1000d, 1000d, -201d);
-		GLSlider scl = new GLSlider(10d, 180d, "Scale figure:", 0d, 1000.5d, 1.0d);
+		GLSlider scl = new GLSlider(10d, 180d, "Scale figure:", 0d, 1.5d, 1.0d);
 		GLSlider dur = new GLSlider(10d, 220d, "Timeline position:  ", 0d, timeline.getCycleDuration().toMillis(), 0d);
 		GLSlider tq = new GLSlider(10d, 260d, "Time quatum:   ", 0d, 200d, 25d);
 
