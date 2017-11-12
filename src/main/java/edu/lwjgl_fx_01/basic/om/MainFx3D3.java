@@ -133,8 +133,8 @@ public class MainFx3D3 extends Application {
 
 	public MainFx3D3() throws Exception {
 
-		assimpLoader = new AssimpLoader("./models/boblamp.md5mesh");
-		//assimpLoader = new AssimpLoader("./models/monster.md5mesh");
+		//assimpLoader = new AssimpLoader("./models/guard.dae");
+		assimpLoader = new AssimpLoader("./models/monster.md5mesh");
 		loadedScene = assimpLoader.getScene();
 		sFx = assimpLoader.getSceneFx();
 
@@ -148,7 +148,7 @@ public class MainFx3D3 extends Application {
 
 		
 		getParameters().getRaw();
-		Scene scene = new Scene(root3D, 600, 600, true);
+		Scene scene = new Scene(root3D, 1024, 768, true);
 		final Scene scene2 = new Scene(grp, 200, 440, true);
 
 		Stage myDialog = new Stage();
@@ -163,15 +163,16 @@ public class MainFx3D3 extends Application {
 		myDialog.setScene(scene2);
 		myDialog.show();
 
-		scene.setFill(Color.TRANSPARENT);
-		stage.initStyle(StageStyle.TRANSPARENT);
-		scene.setFill(Color.TRANSPARENT);
+		scene.setFill(Color.BLACK);
+		//stage.initStyle(StageStyle.TRANSPARENT);
+		//scene.setFill(Color.TRANSPARENT);
 		
 		camera.getTransforms().addAll(cameraXRotate, cameraYRotate, cameraPosition, cameraLookXRotate,
 				cameraLookZRotate);
 		camera.setNearClip(0.1);
 		camera.setFarClip(1000);
-		//camera.setTranslateZ(-80);
+		
+		Cylinder cl = new Cylinder(200,200,200);
 
 		scene.setCamera(camera);
 
@@ -223,7 +224,7 @@ public class MainFx3D3 extends Application {
 			root3D.getChildren().addAll(main);
 			break;
 		case 3:
-			root3D.getChildren().addAll(sFx.getLast());
+			root3D.getChildren().addAll(sFx.getLast(),cl);
 			break;
 		case 4:
 			root3D.getChildren().addAll(figure); 

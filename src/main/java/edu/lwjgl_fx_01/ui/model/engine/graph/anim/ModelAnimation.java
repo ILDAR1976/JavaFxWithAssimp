@@ -75,7 +75,8 @@ public final class ModelAnimation {
         return new KeyValue(target, endValue, interpolator);
     }
 
-    private List<KeyValue> convertToKeyValues(final Affine jointAffine, final Affine keyAffine, final Interpolator interpolator) {
+    @SuppressWarnings("restriction")
+	private List<KeyValue> convertToKeyValues(final Affine jointAffine, final Affine keyAffine, final Interpolator interpolator) {
         final List<KeyValue> keyValues = new ArrayList<>();
         keyValues.add(convertToKeyValue(jointAffine.mxxProperty(), keyAffine.getMxx(), interpolator));
         keyValues.add(convertToKeyValue(jointAffine.mxyProperty(), keyAffine.getMxy(), interpolator));

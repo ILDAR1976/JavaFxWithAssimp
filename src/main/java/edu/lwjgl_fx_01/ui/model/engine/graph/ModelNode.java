@@ -11,6 +11,10 @@ import javafx.scene.shape.TriangleMesh;
 import javafx.scene.shape.VertexFormat;
 import javafx.scene.transform.Affine;
 import javafx.scene.Node;
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -162,9 +166,22 @@ public final class ModelNode extends Group {
 			if (i < materials.size()) {
 				meshView.setMaterial(materials.get(i));
 			} else {
-				PhongMaterial material = new PhongMaterial(Color.BURLYWOOD);
+			       int width = 100;
+			        int height = 100;
+					
+			        final WritableImage diffuseMap = new WritableImage(width, height);
+			        final WritableImage specularMap = new WritableImage(width, height);
+			        final WritableImage selfIllumMap = new WritableImage(width, height);
+			        generateMap(diffuseMap, Color.RED);
+			        generateMap(specularMap, Color.ANTIQUEWHITE);
+			        final PhongMaterial sharedMaterial = new PhongMaterial();
+			        final PhongMaterial sharedMapMaterial = new PhongMaterial();
+			        sharedMapMaterial.setDiffuseMap(diffuseMap);
+			        sharedMapMaterial.setSpecularMap(specularMap);
 
-				meshView.setMaterial(material);
+			        meshView.setMaterial(sharedMapMaterial);
+			 
+				//meshView.setMaterial(material);
 
 				meshView.setDrawMode(DrawMode.FILL);
 				meshView.setCullFace(CullFace.BACK);
@@ -172,6 +189,19 @@ public final class ModelNode extends Group {
 
 			getChildren().add(meshView);
 		}
+	}
+
+	
+	private Image generateMap(WritableImage writableImage, Color color) {
+		// Copy from source to destination pixel by pixel
+		PixelWriter pixelWriter = writableImage.getPixelWriter();
+
+		for (int y = 0; y < writableImage.getHeight(); y++) {
+			for (int x = 0; x < writableImage.getWidth(); x++) {
+				pixelWriter.setColor(x, y, color);
+			}
+		}
+		return writableImage;
 	}
 
 	public void buildSkeleton(final BuildHelper buildHelper) {
