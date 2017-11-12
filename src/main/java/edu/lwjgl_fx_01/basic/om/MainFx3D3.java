@@ -133,8 +133,7 @@ public class MainFx3D3 extends Application {
 
 	public MainFx3D3() throws Exception {
 
-		//assimpLoader = new AssimpLoader("./models/guard.dae");
-		assimpLoader = new AssimpLoader("./models/monster.md5mesh");
+		assimpLoader = new AssimpLoader("./models/guard.dae");
 		loadedScene = assimpLoader.getScene();
 		sFx = assimpLoader.getSceneFx();
 

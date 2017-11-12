@@ -166,13 +166,13 @@ public final class ModelNode extends Group {
 			if (i < materials.size()) {
 				meshView.setMaterial(materials.get(i));
 			} else {
-			       int width = 100;
+			        int width = 100;
 			        int height = 100;
 					
 			        final WritableImage diffuseMap = new WritableImage(width, height);
 			        final WritableImage specularMap = new WritableImage(width, height);
 			        final WritableImage selfIllumMap = new WritableImage(width, height);
-			        generateMap(diffuseMap, Color.RED);
+			        generateMap(diffuseMap, Color.BISQUE);
 			        generateMap(specularMap, Color.ANTIQUEWHITE);
 			        final PhongMaterial sharedMaterial = new PhongMaterial();
 			        final PhongMaterial sharedMapMaterial = new PhongMaterial();

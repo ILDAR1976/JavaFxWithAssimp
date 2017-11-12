@@ -38,6 +38,11 @@ import java.util.List;
 import org.joml.Matrix4f;
 
 import javafx.scene.Group;
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
@@ -98,6 +103,18 @@ public final class Joint extends Group {
 
     }
 
+	private Image generateMap(WritableImage writableImage, Color color) {
+		// Copy from source to destination pixel by pixel
+		PixelWriter pixelWriter = writableImage.getPixelWriter();
+
+		for (int y = 0; y < writableImage.getHeight(); y++) {
+			for (int x = 0; x < writableImage.getWidth(); x++) {
+				pixelWriter.setColor(x, y, color);
+			}
+		}
+		return writableImage;
+	}
+
     public TriangleMesh createCubeMesh() {
 
         float width = 4.1f / 2f;
@@ -142,7 +159,19 @@ public final class Joint extends Group {
     }
 
     public void addMeshView() {
+	    int width = 100;
+	    int height = 100;
+    	final WritableImage diffuseMap = new WritableImage(width, height);
+        final WritableImage specularMap = new WritableImage(width, height);
+        final WritableImage selfIllumMap = new WritableImage(width, height);
+        generateMap(diffuseMap, Color.GRAY);
+        generateMap(specularMap, Color.ANTIQUEWHITE);
+        final PhongMaterial sharedMaterial = new PhongMaterial();
+        final PhongMaterial sharedMapMaterial = new PhongMaterial();
+        sharedMapMaterial.setDiffuseMap(diffuseMap);
+        sharedMapMaterial.setSpecularMap(specularMap);
         final MeshView meshView = new MeshView(createCubeMesh());
+        meshView.setMaterial(sharedMapMaterial);
         getChildren().add(meshView);
     }
 

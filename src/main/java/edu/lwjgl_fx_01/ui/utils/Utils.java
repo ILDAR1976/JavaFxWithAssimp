@@ -402,7 +402,7 @@ public class Utils {
 	public static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
 		ByteBuffer buffer;
 
-		resource = "./source/" + resource;
+		resource = "./models" + resource;
 
 		Path path = Paths.get(resource);
 		if (Files.isReadable(path)) {
