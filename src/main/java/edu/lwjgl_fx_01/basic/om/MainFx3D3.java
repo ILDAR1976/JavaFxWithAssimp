@@ -171,8 +171,6 @@ public class MainFx3D3 extends Application {
 		camera.setNearClip(0.1);
 		camera.setFarClip(1000);
 		
-		Cylinder cl = new Cylinder(200,200,200);
-
 		scene.setCamera(camera);
 
 		cameraRotate(root3D, scene, angleX,  angleY,
@@ -223,7 +221,7 @@ public class MainFx3D3 extends Application {
 			root3D.getChildren().addAll(main);
 			break;
 		case 3:
-			root3D.getChildren().addAll(sFx.getLast(),cl);
+			root3D.getChildren().addAll(sFx.getLast());
 			break;
 		case 4:
 			root3D.getChildren().addAll(figure); 
