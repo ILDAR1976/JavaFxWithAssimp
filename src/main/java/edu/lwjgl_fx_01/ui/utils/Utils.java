@@ -37,12 +37,13 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.system.MemoryUtil.memUTF8;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
+import org.lwjgl.assimp.AIMatrix4x4;
 
-import edu.lwjgl_fx_01.ui.model.engine.LwjglScene;
-import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMesh;
-import edu.lwjgl_fx_01.ui.model.engine.graph.ModelNode;
-import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Joint;
-import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.LwjglNode;
+import edu.lwjgl_fx_01.ui.model.engine.SceneFx;
+import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
+import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
+import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.JointFx;
+import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -315,6 +316,15 @@ public class Utils {
 		return floatArr;
 	}
 
+	public static Affine[] listAffineToArray(List<Affine> list) {
+		int size = list != null ? list.size() : 0;
+		Affine[] affineArr = new Affine[size];
+		for (int i = 0; i < size; i++) {
+			affineArr[i] = list.get(i);
+		}
+		return affineArr;
+	}
+
 	public static double[] listToArrayDouble(List<Double> list) {
 		int size = list != null ? list.size() : 0;
 		double[] doubleArr = new double[size];
@@ -439,22 +449,6 @@ public class Utils {
 		return newBuffer;
 	}
 
-	public static Affine adaptedMatrix(Matrix4f matrix) {
-		Affine affine = new Affine();
-		affine.setMxx(matrix.m00());
-		affine.setMxy(matrix.m10());
-		affine.setMxz(matrix.m20());
-		affine.setTx(matrix.m30());
-		affine.setMyx(matrix.m01());
-		affine.setMyy(matrix.m11());
-		affine.setMyz(matrix.m21());
-		affine.setTy(matrix.m31());
-		affine.setMzx(matrix.m02());
-		affine.setMzy(matrix.m12());
-		affine.setMzz(matrix.m22());
-		affine.setTz(matrix.m32());
-		return affine;
-	}
 
 	public static List<Vector2f> getVector2fListFromFloatBuffer(FloatBuffer inp) {
 		List<Vector2f> out = new ArrayList<>();
@@ -533,26 +527,6 @@ public class Utils {
 			angleY.set(anchorAngleY + sceney - event.getSceneX());
 		});
 
-	}
-
-	public static List<KeyFrame> calculateJointAnimation(Joint joint, LwjglNode node, LwjglScene is, List<KeyFrame> keyFrames) {
-		
-		joint.getTransforms().add(joint.a);
-		
-		int countBones = 38;
-		
-		for (int i = 0; i < is.getAnimations().get("").getFrames().size(); i++) {
-			for (int j = 0; i < countBones; i++) {
-				Matrix4f mat = is.getAnimations().get("").getFrames().get(i).getJointMatrices()[j];
-	
-				Affine affine = adaptedMatrix(mat);
-	
-				keyFrames.add(convertToKeyFrame(node.getTimeOfFrames().get(i).floatValue()  * TIMER_MS_RATIO, joint.a, affine,
-						Interpolator.LINEAR));
-			}
-		}
-
-		return keyFrames;
 	}
 
 	public static KeyFrame convertToKeyFrame(final float t, final Affine jointAffine, final Affine keyAffine,
@@ -695,75 +669,8 @@ public class Utils {
 		return intArray;
 	}
 
-	public static Stream<ModelNode> getModelNodeChildStream(final Group group) {
-		return group.getChildren().stream().filter(child -> child instanceof ModelNode).map(child -> (ModelNode) child);
-	}
-
-	public static Group createSkin(LwjglMesh ms) {
-
-		Group out = new Group();
-
-		TriangleMesh mesh = createMesh(ms);
-
-		MeshView mv = new MeshView(mesh);
-		PhongMaterial material = new PhongMaterial(Color.BURLYWOOD);
-
-		mv.setMaterial(material);
-
-		mv.setDrawMode(DrawMode.FILL);
-		;
-		mv.setCullFace(CullFace.BACK);
-
-		out.getChildren().add(mv);
-
-		return out;
-	}
-
-	public static Joint createJoint(LwjglNode node, int bone, LwjglScene is, int count, Affine affine,
-			List<KeyFrame> keyFrames) {
-
-		Joint joint = new Joint();
-
-		float t = 0.0f;
-
-		Matrix4f mat2 = is.getAnimations().get("").getFrames().get(0).getJointMatrices()[bone];
-
-		// System.out.println(count + " " + node.name);
-
-		Affine a = adaptedMatrix(mat2);
-		TriangleMesh mesh = joint.createCubeMesh();
-		joint.addMeshView();
-		joint.a = node.getAffine();
-
-		joint.getTransforms().add(joint.a);
-
-		for (int i = 0; i < is.getAnimations().get("").getFrames().size(); i++) {
-
-			Matrix4f mat = is.getAnimations().get("").getFrames().get(i).getJointMatrices()[bone];
-
-			affine = adaptedMatrix(mat);
-
-			keyFrames.add(convertToKeyFrame(node.getTimeOfFrames().get(i).floatValue() * 1000f, joint.a, affine,
-					Interpolator.LINEAR));
-		}
-
-		return joint;
-	}
-			
-	private static TriangleMesh createMesh(LwjglMesh inp) {
-		TriangleMesh mesh = new TriangleMesh();
-		mesh.setVertexFormat(VertexFormat.POINT_NORMAL_TEXCOORD);
-		mesh.getPoints().setAll(inp.getPointsFx());
-
-		mesh.getTexCoords().setAll(inp.getTextureCoordianatesFx());
-		if (mesh.getTexCoords().size() == 0)
-			mesh.getTexCoords().addAll(0, 0);
-		if (inp.getTextureCoordianatesFx().length % 2 != 0)
-			mesh.getTexCoords().addAll(0);
-		mesh.getFaces().setAll(inp.getFaces3Fx());
-		mesh.getNormals().setAll(inp.getNormalsFx());
-
-		return mesh;
+	public static Stream<NodeFx> getNodeFxChildStream(final Group group) {
+		return group.getChildren().stream().filter(child -> child instanceof NodeFx).map(child -> (NodeFx) child);
 	}
 
 	public static float toSFN(float inp) {
@@ -823,15 +730,54 @@ public class Utils {
 		return out;
 	}
 	
-	public static void printJoints(ModelNode inp) {
+	public static void printJoints(NodeFx inp) {
 		
 		if (inp.isJoint()) {
 			System.out.println("node: "  + (++countJoint) + ". " + inp.name);
 		}
 		
 		for (Node item : inp.getChildren()) {
-			printJoints((ModelNode)item);
+			printJoints((NodeFx)item);
 		}
+	}
+
+	public static Matrix4f toMatrix(AIMatrix4x4 aiMatrix4x4) {
+		Matrix4f result = new Matrix4f();
+		result.m00(aiMatrix4x4.a1());
+		result.m10(aiMatrix4x4.a2());
+		result.m20(aiMatrix4x4.a3());
+		result.m30(aiMatrix4x4.a4());
+		result.m01(aiMatrix4x4.b1());
+		result.m11(aiMatrix4x4.b2());
+		result.m21(aiMatrix4x4.b3());
+		result.m31(aiMatrix4x4.b4());
+		result.m02(aiMatrix4x4.c1());
+		result.m12(aiMatrix4x4.c2());
+		result.m22(aiMatrix4x4.c3());
+		result.m32(aiMatrix4x4.c4());
+		result.m03(aiMatrix4x4.d1());
+		result.m13(aiMatrix4x4.d2());
+		result.m23(aiMatrix4x4.d3());
+		result.m33(aiMatrix4x4.d4());
+
+		return result;
+	}
+
+	public static Affine adaptedMatrix(Matrix4f matrix) {
+		Affine affine = new Affine();
+		affine.setMxx(matrix.m00());
+		affine.setMxy(matrix.m10());
+		affine.setMxz(matrix.m20());
+		affine.setTx(matrix.m30());
+		affine.setMyx(matrix.m01());
+		affine.setMyy(matrix.m11());
+		affine.setMyz(matrix.m21());
+		affine.setTy(matrix.m31());
+		affine.setMzx(matrix.m02());
+		affine.setMzy(matrix.m12());
+		affine.setMzz(matrix.m22());
+		affine.setTz(matrix.m32());
+		return affine;
 	}
 
 }

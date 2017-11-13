@@ -2,20 +2,20 @@ package edu.lwjgl_fx_01.ui.model.engine.loaders.assimp;
 
 public class VertexWeight {
 
-    private int boneId;
+    private int jointId;
 
     private int vertexId;
 
     private float weight;
 
-    public VertexWeight(int boneId, int vertexId, float weight) {
-        this.boneId = boneId;
+    public VertexWeight(int jointId, int vertexId, float weight) {
+        this.jointId = jointId;
         this.vertexId = vertexId;
         this.weight = weight;
     }
 
-    public int getBoneId() {
-        return boneId;
+    public int getJointId() {
+        return jointId;
     }
 
     public int getVertexId() {

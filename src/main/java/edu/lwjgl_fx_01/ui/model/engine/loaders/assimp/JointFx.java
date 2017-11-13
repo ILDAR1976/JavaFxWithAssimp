@@ -57,10 +57,14 @@ import javafx.scene.transform.Translate;
  * pre-multiply by the worldMatrix. (p' = wm * p) matrix = [T][IS][JO][R][SO][S] where R = [RZ][RY][RX]  (Note: order is
  * determined by rotateOrder) Of these sub-matrices we can set [SO] to identity, so matrix = [T][IS][JO][R][S]
  */
-@SuppressWarnings("restriction")
-public final class Joint extends Group {
-    private int globalId;
-	final Translate t = new Translate();
+@SuppressWarnings({ "restriction", "unused" })
+public final class JointFx extends Group {
+    private int meshId;
+    private int jointId;
+    private String name;
+    Affine affine = new Affine();
+	
+    final Translate t = new Translate();
 
     final Rotate jox = new Rotate();
     final Rotate joy = new Rotate();
@@ -72,19 +76,19 @@ public final class Joint extends Group {
 
     final Scale s = new Scale();
     final Scale is = new Scale();
+    
     // should bind "is" to be in the inverse of the parent's "s"
+	    
+    private List<Affine> transformations = new ArrayList<>();
+    private Affine offsetMatrix;
 
-    public Affine a = new Affine();
-	
-    
-    //experiment fields
-    
-    private List<Matrix4f> transformations = new ArrayList<>();
-    private Matrix4f offset;
-    
-	public Joint() {
+    public JointFx(String id, String name, Affine offsetMatrix) {
         super();
 
+        this.setId(id);
+        this.name = name;
+        this.offsetMatrix = offsetMatrix;
+        
         this.joz.setAxis(Rotate.Z_AXIS);
         this.joy.setAxis(Rotate.Y_AXIS);
         this.jox.setAxis(Rotate.X_AXIS);
@@ -93,12 +97,10 @@ public final class Joint extends Group {
         this.ry.setAxis(Rotate.Y_AXIS);
         this.rz.setAxis(Rotate.Z_AXIS);
 
-        this.getTransforms().addAll(t, is, joz, joy, jox, rz, ry, rx, s, a);
-        
+        this.getTransforms().addAll(t, is, joz, joy, jox, rz, ry, rx, s, affine);
+	}
 
-    }
-
-    public TriangleMesh createCubeMesh() {
+	public TriangleMesh createCubeMesh() {
 
         float width = 4.1f / 2f;
         float points[] = {
@@ -146,28 +148,53 @@ public final class Joint extends Group {
         getChildren().add(meshView);
     }
 
-	public int getGlobalId() {
-		return globalId;
-	}
-
-	public void setGlobalId(int id) {
-		this.globalId = id;
-	}
-
-	public List<Matrix4f> getTransformations() {
+	public List<Affine> getTransformations() {
 		return transformations;
 	}
 
-	public void setTransformations(List<Matrix4f> transformations) {
+	public void setTransformations(List<Affine> transformations) {
 		this.transformations = transformations;
 	}
 
-	public Matrix4f getOffset() {
-		return offset;
+	public Affine getOffsetMatrix() {
+		return offsetMatrix;
 	}
 
-	public void setOffset(Matrix4f offset) {
-		this.offset = offset;
+	public void setOffsetMatrix(Affine offsetMatrix) {
+		this.offsetMatrix = offsetMatrix;
+	}
+
+	
+	public Affine getAffine() {
+		return affine;
+	}
+	
+	public void setAffine(Affine affine) {
+		this.affine = affine;
+	}
+
+	public int getMeshId() {
+		return meshId;
+	}
+
+	public void setMeshId(int meshId) {
+		this.meshId = meshId;
+	}
+
+	public String getJointName() {
+		return name;
+	}
+
+	public void setJointName(String name) {
+		this.name = name;
+	}
+
+	public int getJointId() {
+		return jointId;
+	}
+
+	public void setJointId(int jointId) {
+		this.jointId = jointId;
 	}
 
 	

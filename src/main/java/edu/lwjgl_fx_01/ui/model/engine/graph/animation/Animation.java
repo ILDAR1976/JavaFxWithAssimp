@@ -1,4 +1,4 @@
-package edu.lwjgl_fx_01.ui.model.engine.graph.anim;
+package edu.lwjgl_fx_01.ui.model.engine.graph.animation;
 
 import java.util.List;
 

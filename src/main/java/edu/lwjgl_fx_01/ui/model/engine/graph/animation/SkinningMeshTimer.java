@@ -1,6 +1,6 @@
-package edu.lwjgl_fx_01.ui.model.engine.graph.anim;
+package edu.lwjgl_fx_01.ui.model.engine.graph.animation;
 
-import edu.lwjgl_fx_01.ui.model.engine.graph.SkinningMesh;
+import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
 import javafx.animation.AnimationTimer;
 
 /**

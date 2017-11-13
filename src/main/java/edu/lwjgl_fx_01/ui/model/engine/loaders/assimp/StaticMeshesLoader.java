@@ -26,35 +26,32 @@ import org.lwjgl.assimp.AIColor4D;
 import org.lwjgl.assimp.AIFace;
 import org.lwjgl.assimp.AIMaterial;
 import org.lwjgl.assimp.AIMesh;
+import org.lwjgl.assimp.AINode;
 import org.lwjgl.assimp.AIScene;
 import org.lwjgl.assimp.AIString;
 import org.lwjgl.assimp.AIVector3D;
 import org.lwjgl.assimp.Assimp;
 import edu.lwjgl_fx_01.ui.utils.Utils;
-import edu.lwjgl_fx_01.ui.controller.ModelController;
-import edu.lwjgl_fx_01.ui.controller.ModelControllerStore;
-import edu.lwjgl_fx_01.ui.model.engine.LwjglScene;
+import javafx.scene.transform.Affine;
+
+import edu.lwjgl_fx_01.ui.model.engine.SceneFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMaterial;
-import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMesh;
+import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
 import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglTexture;
-import edu.lwjgl_fx_01.ui.model.engine.graph.ModelNode;
-import edu.lwjgl_fx_01.ui.model.engine.graph.Skeleton;
+import edu.lwjgl_fx_01.ui.model.engine.graph.MeshFx;
+import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
 
 public class StaticMeshesLoader {
 	
-	public static LwjglScene mainScene = new LwjglScene();
-	public static ModelControllerStore modelController = new ModelControllerStore("CONTROLLER");
-	public static List<ModelController> Controller = new ArrayList<>();
-	public static List<String> bonesNames = new ArrayList<>();
-	public static Skeleton skeleton = null;
+	//public static List<String> bonesNames = new ArrayList<>();
 	
-    public static LwjglScene load(String resourcePath, String texturesDir) throws Exception {
+    public static SceneFx load(String resourcePath, String texturesDir) throws Exception {
         return load(resourcePath, texturesDir,
                 aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate
                         | aiProcess_FixInfacingNormals);
     }
 
-    public static LwjglScene load(String resourcePath, String texturesDir, int flags) throws Exception {
+    public static SceneFx load(String resourcePath, String texturesDir, int flags) throws Exception {
         AIScene aiScene = aiImportFile(resourcePath, flags);
         if (aiScene == null) {
             throw new Exception("Error loading model");
@@ -70,17 +67,16 @@ public class StaticMeshesLoader {
 
         int numMeshes = aiScene.mNumMeshes();
         PointerBuffer aiMeshes = aiScene.mMeshes();
-        LwjglMesh[] meshes = new LwjglMesh[numMeshes];
-        List<LwjglMesh> mainMeshes = new ArrayList<>();
+        MeshFx[] meshes = new MeshFx[numMeshes];
+        List<SkinningMesh> mainMeshes = new ArrayList<>();
         
         for (int i = 0; i < numMeshes; i++) {
             AIMesh aiMesh = AIMesh.create(aiMeshes.get(i));
-            LwjglMesh mesh = processMesh(aiMesh, materials);
+            MeshFx mesh = processMesh(aiMesh, materials);
             meshes[i] = mesh;
-            mainMeshes.add(mesh);
         }
 
-        mainScene.setMeshes(mainMeshes);
+        SceneFx mainScene = new SceneFx("main_scene"); 
         return mainScene;
     }
 
@@ -138,29 +134,29 @@ public class StaticMeshesLoader {
         materials.add(material);
     }
 
-    private static LwjglMesh processMesh(AIMesh aiMesh, List<LwjglMaterial> materials) {
-        List<Float> vertices = new ArrayList<>();
+    private static MeshFx processMesh(AIMesh aiMesh, List<LwjglMaterial> materials) {
+        List<Float> points = new ArrayList<>();
         List<Float> textures = new ArrayList<>();
         List<Float> normals = new ArrayList<>();
-        List<Integer> indices = new ArrayList();
+        List<Integer> faces = new ArrayList();
         
-        processVertices(aiMesh, vertices);
+        processVertices(aiMesh, points);
         processNormals(aiMesh, normals);
         processTextCoords(aiMesh, textures);
-        processIndices(aiMesh, indices);
+        processIndices(aiMesh, faces);
 
         float[][] bonesVerteicesWeigth = new float[0][0];
-        
-        LwjglMesh mesh = new LwjglMesh(Utils.listToArray(vertices), Utils.listToArray(textures),
-                Utils.listToArray(normals), Utils.listIntToArray(indices), bonesVerteicesWeigth, null);
-        LwjglMaterial material;
-        int materialIdx = aiMesh.mMaterialIndex();
-        if (materialIdx >= 0 && materialIdx < materials.size()) {
-            material = materials.get(materialIdx);
-        } else {
-            material = new LwjglMaterial();
-        }
-        mesh.setMaterial(material);
+
+        MeshFx mesh = 	new MeshFx( 		
+    			Utils.listToArray(points),
+    			Utils.listToArray(normals),
+    			Utils.listToArray(textures),
+    			Utils.listIntToArray(faces),
+        		null,
+        		null,
+        		null,
+        		null
+        );
 
         return mesh;
     }

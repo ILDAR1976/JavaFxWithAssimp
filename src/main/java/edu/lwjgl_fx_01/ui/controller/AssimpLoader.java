@@ -10,9 +10,8 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GLUtil;
 import org.lwjgl.system.Callback;
-import edu.lwjgl_fx_01.ui.model.engine.LwjglScene;
-import edu.lwjgl_fx_01.ui.model.engine.ModelScene;
-import edu.lwjgl_fx_01.ui.model.engine.graph.ModelNode;
+import edu.lwjgl_fx_01.ui.model.engine.SceneFx;
+import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.AnimMeshesLoader;
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.StaticMeshesLoader;
 import javafx.animation.Timeline;
@@ -41,11 +40,9 @@ public class AssimpLoader {
     int width = 1;
     int height = 1;
     
-    private LwjglScene scene;
-    private LinkedList<ModelScene> sceneFx;
-    
-    AnimMeshesLoader animationModel = new AnimMeshesLoader();
+    private SceneFx scene;
     StaticMeshesLoader staticModel = new StaticMeshesLoader();
+    AnimMeshesLoader animationModel = new AnimMeshesLoader();
 
     GLCapabilities caps;
     Callback debugProc;
@@ -101,44 +98,15 @@ public class AssimpLoader {
     
     @SuppressWarnings("static-access")
 	void loadAnimationModel(String fileName) throws Exception {
-    	scene = animationModel.loadAnimGameItem(fileName, "");
-    	sceneFx = animationModel.getScenesfx();
+		scene = animationModel.loadAnimGameItem(fileName, "");
     }
 
 	void loadModel(String fileName) throws Exception {
     	scene = staticModel.load(fileName, "");
     }
 	
-	public LwjglScene getScene() {
+	public SceneFx getScene() {
 		return scene;
-	}
-
-	public LinkedList<ModelScene> getSceneFx() {
-		return sceneFx;
-	}
-	
-	public ModelNode getModelScene() {
-		return animationModel.getModelNode();
-	}
-    
-	public String getBoneName(int index) {
-		return animationModel.getBoneName(index);
-	}
-	
-	public int getQtyBones() {
-		return animationModel.getQtyBones();
-	}
-  
-	public Map<String, Timeline> getTimelines() {
-		return animationModel.getTimelines();
-	}
-
-	public void setTimeQuantum(float time) {
-		animationModel.setTimeQuantum(time);
-	}
-
-	public float getTimeQuantum() {
-		return animationModel.getTimeQuantum();
 	}
 
 }
