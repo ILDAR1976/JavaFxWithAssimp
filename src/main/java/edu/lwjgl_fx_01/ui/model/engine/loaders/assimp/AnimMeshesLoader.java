@@ -84,6 +84,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 	private static final LinkedList<NodeFx> jointsFx = new LinkedList<>();
 	private static Map<String,JointFx> jointsMap = new LinkedHashMap();
 	private static List<String> jointNamesList = new ArrayList<>();
+	private static Parent rootNodeSuprime;
 
 	private static final NodeFx modelNode = new NodeFx("1", "CONTROLLER", "CONTROLLER");
 
@@ -105,7 +106,9 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		if (aiScene == null) {
 			throw new Exception("Error loading model");
 		}
-
+		
+		jointsMap = createJointsMap(aiScene, jointsMap);
+		
 		int numMaterials = aiScene.mNumMaterials();
 		PointerBuffer aiMaterials = aiScene.mMaterials();
 		List<LwjglMaterial> materials = new ArrayList<>();
@@ -121,7 +124,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		SceneFx rootNodeFx = new SceneFx("main_scene");
 		AINode aiRootNode = aiScene.mRootNode();
 		Matrix4f rootTransfromation = toMatrix(aiRootNode.mTransformation());
-		
+	
 		for (int i = 0; i < numMeshes; i++) {
 			AIMesh aiMesh = AIMesh.create(aiMeshes.get(i));
 			MeshFx mesh = processMesh(aiMesh, aiRootNode, materials, jointsMap, i);
@@ -134,12 +137,12 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		
 	    NodeFx rootNode = processNodesHierarchy(aiRootNode, null);
 		
+	    rootNodeSuprime = rootNode;
+	    
 		Parent hierarchy = getParent(rootNode, jointsMap);
-
-		//hierarchy.getTransforms().add(adaptedMatrix(rootTransfromation));
 		
-		
-		for (int i = 0; i < numMeshes; i++) {
+			for (int i = 0; i < numMeshes; i++) {
+			//for (int i = 0; i < 0; i++) {
 			SkinningMesh skinningMesh = new SkinningMesh(
 					meshes[i],
 					meshes[i].getJointsPointsWeights(), 
@@ -232,23 +235,16 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 
 	@SuppressWarnings("static-access")
 	private static Parent getParent(NodeFx rootNode, Map<String, JointFx> jointsMap) {
-		
 		NodeFx job = findOrigin(rootNode);
-		
 		if ( job != null ) {
 			rootNode = rootineHierarchy(job);
 		}
-		
 		Skeleton parent = new Skeleton();
-		
-		//parent = parent.SetChild(rootNode, jointList);
 		parent = parent.fromNodeFx(rootNode, jointsMap);
-		
 		return parent;
 	}
 
 	private static NodeFx findOrigin(NodeFx node) {
-		
 		if (node.hasJoints()) { 
 			return node;
 		} else {
@@ -257,33 +253,27 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 				if (childNode != null ) return childNode;
 			}
 		}
-		
 		return null;
 	}
 	
 	private static NodeFx rootineHierarchy(NodeFx node) {
-		
 		List<Node> nodes = node.getChildren().stream().filter(v -> !((NodeFx)v).isJoint()).collect(Collectors.toList());
-		
 		nodes.forEach(v -> node.getChildren().remove(v));
-		
 		for (Node item : node.getChildren())
-
 			rootineHierarchy((NodeFx) item);
-		
 		return node;
 	}
 	
 	private static void processJoints(
-			AIMesh aiMesh, 
-			Map<String, JointFx> jointsMap,
-			List<String> jointNamesList,
-			List<Affine> bindPosList,
-			int meshId, 
-			int countIndices, 
-			List<float[][]> jointsPointsWeigth,
-			List<JointFx> currnetMeshJoints,
-			List<Integer> currentJoints) {
+		AIMesh aiMesh, 
+		Map<String, JointFx> jointsMap,
+		List<String> jointNamesList,
+		List<Affine> bindPosList,
+		int meshId, 
+		int countIndices, 
+		List<float[][]> jointsPointsWeigth,
+		List<JointFx> currnetMeshJoints,
+		List<Integer> currentJoints) {
 		
 		Map<Integer, List<VertexWeight>> weightSet = new HashMap<>();
 		int numBones = aiMesh.mNumBones();
@@ -308,7 +298,6 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		
 		bindPosList.clear();
 		jointNamesList.clear();
-		
 
 		List<Affine> bindPosListBuf = null;
 		List<String> jointNamesListBuf = null;
@@ -318,23 +307,16 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		for (int i = 0; i < numBones; i++) {
 			AIBone aiBone = AIBone.create(aiBones.get(i));
 
-			if (jointsMap.get(aiBone.mName().dataString().trim()) != null) {
-				joint = jointsMap.get(aiBone.mName().dataString().trim());
-			} else {
-				joint = new JointFx(aiBone.mName().dataString().trim(), aiBone.mName().dataString().trim(), adaptedMatrix(toMatrix(aiBone.mOffsetMatrix())));
-				jointsMap.put(aiBone.mName().dataString().trim(),joint);
-			}
+			joint = jointsMap.get(aiBone.mName().dataString().trim().toLowerCase());
 			
 			joint.setJointId(i);
 			joint.setMeshId(meshId);
 			joint.setOffsetMatrix(adaptedMatrix(toMatrix(aiBone.mOffsetMatrix())));
-			//joint.getTransforms().add(adaptedMatrix(toMatrix(aiBone.mOffsetMatrix())));
+			
 			bindPosList.add(joint.getOffsetMatrix());
-			jointNamesList.add(joint.getJointName());
+			jointNamesList.add(joint.getJointName().toLowerCase());
 			currnetMeshJoints.add(joint);
 			
-			//System.out.println(i + " " + bone.getBoneName());
-
 			int numWeights = aiBone.mNumWeights();
 			AIVertexWeight.Buffer aiWeights = aiBone.mWeights();
 			for (int j = 0; j < numWeights; j++) {
@@ -358,14 +340,12 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 				"joint: numBones: " + numBones + " numVertices: " + numVertices + " exterpolate points: " + numVertices * 3);
 
 		maxBoneDimSize++;
-		Set<Integer> ubone = new HashSet<>();
 
 		for (Map.Entry<Integer, List<VertexWeight>> item : weightSet.entrySet()) {
 			for (VertexWeight itemVW : item.getValue()) {
 				jointsPointsWeigthBuff[itemVW.getJointId()][itemVW.getVertexId()] = itemVW.getWeight();
 				if (itemVW.getJointId() >= numBones)
 					System.out.println(itemVW.getJointId());
-
 			}
 		}
 		
@@ -459,7 +439,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 			int j = 0;
   			for (Map.Entry<String, JointFx> item : jointsMap.entrySet()) {
 				JointFx joint = item.getValue();
-				NodeFx node = rootNode.findByName(joint.getId());
+				NodeFx node = rootNode.findByNameWithRootNode(joint.getId().trim().toLowerCase(), (NodeFx)rootNodeSuprime);
 
 				Affine boneMatrix = node.getTransformations().get(i);
 
@@ -470,6 +450,26 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return frameList;
 	}
 
+	private static Map<String, JointFx> createJointsMap(AIScene aiScene, Map<String, JointFx> outJoint) {
+
+		int numAnimations = aiScene.mNumAnimations();
+		PointerBuffer aiAnimations = aiScene.mAnimations();
+
+		for (int i = 0; i < numAnimations; i++) {
+			AIAnimation aiAnimation = AIAnimation.create(aiAnimations.get(i));
+			int numChanels = aiAnimation.mNumChannels();
+			PointerBuffer aiChannels = aiAnimation.mChannels();
+			for (int j = 1; j < numChanels; j++) {
+				AINodeAnim aiNodeAnim = AINodeAnim.create(aiChannels.get(j));
+				String nodeName = aiNodeAnim.mNodeName().dataString().trim().toLowerCase();
+				JointFx joint = new JointFx(nodeName, nodeName, new Affine());
+				outJoint.put(nodeName, joint);
+			}
+		}
+		
+		return outJoint;
+	}
+	
 	private static Map<String, Animation> processAnimations(
 			AIScene aiScene, 
 			Map<String, JointFx> jointsMap,
@@ -487,9 +487,9 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 			PointerBuffer aiChannels = aiAnimation.mChannels();
 			for (int j = 1; j < numChanels; j++) {
 				AINodeAnim aiNodeAnim = AINodeAnim.create(aiChannels.get(j));
-				String nodeName = aiNodeAnim.mNodeName().dataString();
+				String nodeName = aiNodeAnim.mNodeName().dataString().trim().toLowerCase();
 				NodeFx node = rootNode.findByName(nodeName);
-
+				//System.out.println(nodeName + " : " + node);
 				buildTransFormationMatrices(aiNodeAnim, node);
 			}
 
@@ -505,16 +505,20 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		if (aiNode == null)
 			return null;
 
-		String nodeName = aiNode.mName().dataString();
+		String nodeName = aiNode.mName().dataString().trim().toLowerCase();
 		
 		JointFx foundJoint = jointsMap.get(nodeName);
 		
 		NodeFx nodeFx;
+		
 		if (foundJoint != null) {
 			nodeFx = new NodeFx(nodeName,nodeName,"JOINT");
-			nodeFx.getTransforms().addAll(adaptedMatrix(toMatrix(aiNode.mTransformation())));
 		} else
-			nodeFx = new NodeFx(nodeName,"","");
+			nodeFx = new NodeFx(nodeName,nodeName,"");
+		
+		nodeFx.getTransforms().addAll(adaptedMatrix(toMatrix(aiNode.mTransformation())));
+		
+		//System.out.println(++counter + " " + nodeFx.getId());
 		
 		int numChildren = aiNode.mNumChildren();
 		PointerBuffer aiChildren = aiNode.mChildren();

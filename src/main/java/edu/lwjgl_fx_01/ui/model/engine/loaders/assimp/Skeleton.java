@@ -16,18 +16,13 @@ import javafx.scene.transform.Affine;
 public class Skeleton extends Parent {
     public Map<String, JointFx> joints = new LinkedHashMap<>();
     private final Map<String, Affine> bindTransforms = new LinkedHashMap<>();
-
 	
 	public static Skeleton SetChild(final NodeFx rootNode, List<JointFx> jointList) {
         final Skeleton skeleton = new Skeleton();
-
         skeleton.getTransforms().addAll(rootNode.getTransforms());
-        
         skeleton.getChildren().addAll(rootNode.getChildren());
-       
         return skeleton;
     }
-    
     
     public static Skeleton fromNodeFx(final NodeFx rootNode, Map<String, JointFx> jointsMap) {
         final Skeleton skeleton = new Skeleton();
@@ -50,8 +45,8 @@ public class Skeleton extends Parent {
     	return modelNodes.stream().
                 map(node -> {
                     final JointFx joint = createJointFromNode(node, jointsMap);
-                    joints.put(joint.getId(), joint);
-                    bindTransforms.put(joint.getId(), joint.getAffine());
+                    joints.put(joint.getId().trim(), joint);
+                    bindTransforms.put(joint.getId().trim(), joint.getAffine());
                     final List<NodeFx> children = node.getNodeFxChildStream().collect(Collectors.toList());
                     joint.getChildren().addAll(buildJoint(children, joints, bindTransforms, jointsMap));
                     return joint;
@@ -60,7 +55,7 @@ public class Skeleton extends Parent {
     }
 
     private static JointFx createJointFromNode(final NodeFx node, Map<String, JointFx> jointsMap) {
-        JointFx joint = jointsMap.get(node.getId());
+        JointFx joint = jointsMap.get(node.getId().trim());
         
         //joint.createCubeMesh();
         //joint.addMeshView();

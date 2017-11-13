@@ -34,7 +34,7 @@ package edu.lwjgl_fx_01.ui.model.engine.shape3d;
 import edu.lwjgl_fx_01.ui.model.engine.graph.MeshFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.JointFx;
-import edu.lwjgl_fx_01.ui.utils.Utils;
+import static edu.lwjgl_fx_01.ui.utils.Utils.*;
 import javafx.beans.InvalidationListener;
 import javafx.collections.ObservableFloatArray;
 import javafx.geometry.Point3D;
@@ -183,10 +183,10 @@ public final class SkinningMesh extends TriangleMesh {
         for (final JointIndex jointIndex : jointIndexForest) {
             if (jointIndex.parent == null) {
                 jointIndex.localToGlobalTransform = bindGlobalInverseTransform.createConcatenation(jointIndex.node.getLocalToParentTransform());
-                //System.out.println("A " + jointIndex.node.getId());
+                //System.out.println(" A " + jointIndex.node.getId());
             } else {
                 jointIndex.localToGlobalTransform = jointIndex.parent.localToGlobalTransform.createConcatenation(jointIndex.node.getLocalToParentTransform());
-                //System.out.println("B " + jointIndex.node.getId());
+                //System.out.println(++counter + " B " + jointIndex.node.getId());
             }
             if (jointIndex.index != -1) {
                 jointToRootTransforms[jointIndex.index] = jointIndex.localToGlobalTransform;
@@ -217,6 +217,7 @@ public final class SkinningMesh extends TriangleMesh {
         final double[] t = new double[12];
         float[] relativePoint;
         for (int j = 0; j < nJoints; j++) {
+        	if (jointToRootTransforms[j] == null) continue; 
             jointToRootTransforms[j].toArray(MatrixType.MT_3D_3x4, t);
             relativePoint = relativePoints[j];
             for (Integer i : weightIndices[j]) {

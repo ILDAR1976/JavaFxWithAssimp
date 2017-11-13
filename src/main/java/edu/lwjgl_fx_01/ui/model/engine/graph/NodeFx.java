@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.scene.Parent;
 import org.joml.Matrix4f;
 
 import edu.lwjgl_fx_01.ui.model.engine.graph.animation.SkinningMeshTimer;
@@ -102,7 +103,23 @@ public final class NodeFx extends Group {
 		}
 		return result;
 	}
-	
+
+	public NodeFx findByNameWithRootNode(String targetName, NodeFx rootNode) {
+		NodeFx result = null;
+		
+		if (rootNode.name.equals(targetName)) {
+			result = rootNode;
+		} else {
+			for (Node child : rootNode.getChildren()) {
+				result = ((NodeFx)child).findByNameWithRootNode(targetName, (NodeFx)child);
+				if (result != null) {
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
     public int getAnimationFrames() {
         int numFrames = this.transformations.size();
         for (Node child : this.getChildren()) {
