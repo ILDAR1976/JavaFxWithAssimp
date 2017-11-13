@@ -111,7 +111,6 @@ public final class NodeFx extends Group {
         }
         return numFrames;
     }
-
 	
 	public List<NodeFx> getMeshes() {
 		return meshes;
@@ -124,17 +123,10 @@ public final class NodeFx extends Group {
 	public void add(NodeFx mesh) {
 		this.meshes.add(mesh);
 	}
-
-	public ByteBuffer getTimeOfFrames() {
-
-		return null;
-	}
-
 	
 	public List<Affine> getTransformations() {
 		return transformations;
 	}
-	
 
 	public void setTransformations(List<Affine> transformations) {
 		this.transformations = transformations;
@@ -143,5 +135,10 @@ public final class NodeFx extends Group {
 	public void addTransformations(Affine transformations) {
 		this.transformations.add(transformations);
 	}
+
+	public List<Float> getTimeOfFrames() {
+		return timeOfFrames;
+	}
+	
 	
 }

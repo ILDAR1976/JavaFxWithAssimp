@@ -109,4 +109,8 @@ public class AssimpLoader {
 		return scene;
 	}
 
+	public Map<String, Timeline> getTimelines() {
+		return animationModel.getTimelines();
+	}
+
 }

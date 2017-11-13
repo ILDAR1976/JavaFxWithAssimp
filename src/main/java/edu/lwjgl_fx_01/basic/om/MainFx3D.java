@@ -194,7 +194,7 @@ public class MainFx3D extends Application {
 		final Timeline timeline = new Timeline();
 		timeline.getKeyFrames().addAll(keyFrames);
 		timeline.setCycleCount(Timeline.INDEFINITE);
-		//assimpLoader.getTimelines().values().forEach(tl -> timeline.getKeyFrames().addAll(tl.getKeyFrames()));
+		assimpLoader.getTimelines().values().forEach(tl -> timeline.getKeyFrames().addAll(tl.getKeyFrames()));
 		timeline.play();
 
 		stage.setScene(scene);

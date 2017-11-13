@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,9 @@ import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
 import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMaterial;
 import edu.lwjgl_fx_01.ui.model.engine.graph.MeshFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
+import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
+import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Skeleton;
+import edu.lwjgl_fx_01.ui.model.engine.graph.animation.AnimationFx;
 
 import static edu.lwjgl_fx_01.ui.utils.Utils.*;
 import edu.lwjgl_fx_01.ui.model.engine.graph.animation.AnimatedFrame;
@@ -78,7 +82,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 	private static final Map<String, NodeFx> nodesFxMap = new HashMap();
 	private final static Map<String, Timeline> timelines = new HashMap<>();
 	private static final LinkedList<NodeFx> jointsFx = new LinkedList<>();
-	private static Map<String,JointFx> jointsMap = new HashMap();
+	private static Map<String,JointFx> jointsMap = new LinkedHashMap();
 	private static List<String> jointNamesList = new ArrayList<>();
 
 	private static final NodeFx modelNode = new NodeFx("1", "CONTROLLER", "CONTROLLER");
@@ -95,7 +99,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 	}
 
 	public static SceneFx loadAnimGameItem(String resourcePath, String texturesDir, int flags) throws Exception {
-		final Map<String, List<TriangleMesh>> meshesMap = new HashMap();
+		final Map<String, List<TriangleMesh>> meshesMap = new LinkedHashMap();
 		
 		AIScene aiScene = aiImportFile(resourcePath, flags);
 		if (aiScene == null) {
@@ -131,9 +135,11 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 	    NodeFx rootNode = processNodesHierarchy(aiRootNode, null);
 		
 		Parent hierarchy = getParent(rootNode, jointsMap);
+
+		//hierarchy.getTransforms().add(adaptedMatrix(rootTransfromation));
 		
-		//for (int i = 0; i < numMeshes; i++) {
-		for (int i = 0; i < 0; i++) {	
+		
+		for (int i = 0; i < numMeshes; i++) {
 			SkinningMesh skinningMesh = new SkinningMesh(
 					meshes[i],
 					meshes[i].getJointsPointsWeights(), 
@@ -172,6 +178,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		}
 
 		Map<String, Animation> animations = processAnimations(aiScene, jointsMap, rootNode);
+		buildTimelines(jointsMap, (Skeleton) hierarchy);
 		
 		rootNodeFx.getChildren().addAll(Arrays.asList(meshes));
 		rootNodeFx.getChildren().add(hierarchy);
@@ -321,7 +328,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 			joint.setJointId(i);
 			joint.setMeshId(meshId);
 			joint.setOffsetMatrix(adaptedMatrix(toMatrix(aiBone.mOffsetMatrix())));
-			joint.getTransforms().add(adaptedMatrix(toMatrix(aiBone.mOffsetMatrix())));
+			//joint.getTransforms().add(adaptedMatrix(toMatrix(aiBone.mOffsetMatrix())));
 			bindPosList.add(joint.getOffsetMatrix());
 			jointNamesList.add(joint.getJointName());
 			currnetMeshJoints.add(joint);
@@ -423,6 +430,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 
 			node.addTransformations(adaptedMatrix(transfMat));
 			timeOfFramesFloat.add((float) timeOfFrame * timeQuantum);
+			nodesFxMap.put(node.getId(), node);
 		}
 		node.setTimeOfFrames(timeOfFramesFloat);
 	}
@@ -504,7 +512,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		NodeFx nodeFx;
 		if (foundJoint != null) {
 			nodeFx = new NodeFx(nodeName,nodeName,"JOINT");
-			nodeFx.getTransforms().addAll(foundJoint.getTransforms());
+			nodeFx.getTransforms().addAll(adaptedMatrix(toMatrix(aiNode.mTransformation())));
 		} else
 			nodeFx = new NodeFx(nodeName,"","");
 		
@@ -537,6 +545,32 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 	
 	public static float getTimeQuantum() {
 		return timeQuantum;
+	}
+
+	public static Map<String, List<KeyFrame>> getKeyFramesMap(Map<String, JointFx> jointsMap, Skeleton skeleton) {
+		final Map<String, List<KeyFrame>> frames = new HashMap<>();
+
+		jointsMap.entrySet().stream().map((map) -> {
+			AnimationFx animation = new AnimationFx(map.getKey());
+			NodeFx nodeFx = nodesFxMap.get(map.getKey());
+
+			animation.setOutput(AffineListToDouble(nodeFx.getTransformations()));
+			animation.setInput(listToArray(nodeFx.getTimeOfFrames()));
+
+			animation.setTarget(map.getKey());
+			return animation;
+		}).forEach(animation -> frames.put(animation.id, animation.calculateAnimation(skeleton)));
+
+		return frames;
+	}
+
+	public static void buildTimelines(Map<String, JointFx> jointsMap, Skeleton skeleton) {
+		getKeyFramesMap(jointsMap, skeleton).forEach((key, value) -> {
+			if (!timelines.containsKey(key)) {
+				timelines.put(key, new Timeline());
+			}
+			timelines.get(key).getKeyFrames().addAll(value);
+		});
 	}
 
 }

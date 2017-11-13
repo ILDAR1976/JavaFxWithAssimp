@@ -1,4 +1,4 @@
-package edu.lwjgl_fx_01.ui.model.engine.graph.anim;
+package edu.lwjgl_fx_01.ui.model.engine.graph.animation;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -14,13 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import edu.lwjgl_fx_01.ui.model.engine.graph.Skeleton;
-import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Joint;
+import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Skeleton;
+import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.JointFx;
 
 /**
  * @author Eclion
  */
-public final class ModelAnimation {
+@SuppressWarnings({ "restriction", "unused" })
+public final class AnimationFx {
 
     //ratio set for the animation used for testing.
     private static final int TIMER_MS_RATIO = 1000;
@@ -30,9 +31,9 @@ public final class ModelAnimation {
     private double[] output;
     private Interpolator[] interpolators;
     private String target; 
-    private final List<ModelAnimation> childAnimations = new ArrayList<>();
+    private final List<AnimationFx> childAnimations = new ArrayList<>();
     
-    public ModelAnimation(final String id) {
+    public AnimationFx(final String id) {
         this.id = id;
     }
 
@@ -53,12 +54,12 @@ public final class ModelAnimation {
     }
 
     @SuppressWarnings("restriction")
-	private List<KeyFrame> calculateJointAnimation(Joint joint) {
+	private List<KeyFrame> calculateJointAnimation(JointFx joint) {
         final List<KeyFrame> keyFrames = new ArrayList<>();
         int a = 0;
         for (int i = 0; i < this.input.length; i++) {
             final Affine keyAffine = new Affine(this.output, MatrixType.MT_3D_4x4, i * 16);
-            keyFrames.add(this.convertToKeyFrame(this.input[i] * TIMER_MS_RATIO, joint.a, keyAffine, Interpolator.LINEAR));
+            keyFrames.add(this.convertToKeyFrame(this.input[i] * TIMER_MS_RATIO, joint.getAffine(), keyAffine, Interpolator.LINEAR));
             a = 0;
         }
         return keyFrames;
@@ -75,7 +76,8 @@ public final class ModelAnimation {
         return new KeyValue(target, endValue, interpolator);
     }
 
-    private List<KeyValue> convertToKeyValues(final Affine jointAffine, final Affine keyAffine, final Interpolator interpolator) {
+    @SuppressWarnings("restriction")
+	private List<KeyValue> convertToKeyValues(final Affine jointAffine, final Affine keyAffine, final Interpolator interpolator) {
         final List<KeyValue> keyValues = new ArrayList<>();
         keyValues.add(convertToKeyValue(jointAffine.mxxProperty(), keyAffine.getMxx(), interpolator));
         keyValues.add(convertToKeyValue(jointAffine.mxyProperty(), keyAffine.getMxy(), interpolator));
@@ -99,7 +101,7 @@ public final class ModelAnimation {
         }
     }
 
-    public void addChild(final ModelAnimation animation) {
+    public void addChild(final AnimationFx animation) {
         childAnimations.add(animation);
     }
 
