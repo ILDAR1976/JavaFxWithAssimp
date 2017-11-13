@@ -132,8 +132,8 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		
 		Parent hierarchy = getParent(rootNode, jointsMap);
 		
-		for (int i = 0; i < numMeshes; i++) {
-			
+		//for (int i = 0; i < numMeshes; i++) {
+		for (int i = 0; i < 0; i++) {	
 			SkinningMesh skinningMesh = new SkinningMesh(
 					meshes[i],
 					meshes[i].getJointsPointsWeights(), 
@@ -175,6 +175,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		
 		rootNodeFx.getChildren().addAll(Arrays.asList(meshes));
 		rootNodeFx.getChildren().add(hierarchy);
+		
 		return rootNodeFx;
 	}
 

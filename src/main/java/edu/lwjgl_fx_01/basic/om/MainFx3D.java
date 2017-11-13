@@ -178,9 +178,9 @@ public class MainFx3D extends Application {
 
 		Group test = new Group();
 
-		switch (3) {
+		switch (0) {
 		case 0:
-			root3D.getChildren().addAll(meshes, figure); 
+			root3D.getChildren().addAll(ihaScene); 
 			break;
 		case 1:	
 			root3D.getChildren().addAll(meshes);

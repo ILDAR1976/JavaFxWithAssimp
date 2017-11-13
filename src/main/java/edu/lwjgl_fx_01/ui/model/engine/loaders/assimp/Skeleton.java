@@ -61,7 +61,10 @@ public class Skeleton extends Parent {
 
     private static JointFx createJointFromNode(final NodeFx node, Map<String, JointFx> jointsMap) {
         JointFx joint = jointsMap.get(node.getId());
-        System.out.println(++counter + ". joint create: " + node.name + " " + joint.getId());
+        
+        joint.createCubeMesh();
+        joint.addMeshView();
+        
         joint.setId(node.getId().trim());
         joint.setTransformations(node.getTransformations());
         node.getTransforms().stream().
