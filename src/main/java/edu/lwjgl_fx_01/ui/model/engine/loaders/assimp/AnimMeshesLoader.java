@@ -46,7 +46,7 @@ import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
 
-import edu.lwjgl_fx_01.ui.utils.Utils;
+import static edu.lwjgl_fx_01.ui.utils.Utils.*;
 import edu.lwjgl_fx_01.ui.model.engine.SceneFx;
 import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
 import edu.lwjgl_fx_01.ui.model.engine.graph.MaterialFx;
@@ -56,7 +56,7 @@ import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
 import edu.lwjgl_fx_01.ui.model.engine.loaders.assimp.Skeleton;
 import edu.lwjgl_fx_01.ui.model.engine.graph.animation.AnimationFx;
 
-import static edu.lwjgl_fx_01.ui.utils.Utils.*;
+import  edu.lwjgl_fx_01.ui.utils.Utils.*;
 import edu.lwjgl_fx_01.ui.model.engine.graph.animation.AnimatedFrame;
 import edu.lwjgl_fx_01.ui.model.engine.graph.animation.Animation;
 import edu.lwjgl_fx_01.ui.model.engine.graph.animation.SkinningMeshTimer;
@@ -76,30 +76,30 @@ import javafx.scene.shape.DrawMode;
 
 @SuppressWarnings({ "unchecked", "rawtypes", "unused", "restriction" })
 public class AnimMeshesLoader extends StaticMeshesLoader {
-	static float timeQuantum = 1f;
-	private static final LinkedList<SceneFx> scenesFx = new LinkedList<>();
-	private static final LinkedList<NodeFx> nodesFx = new LinkedList<>();
-	private static final Map<String, NodeFx> nodesFxMap = new HashMap();
-	private final static Map<String, Timeline> timelines = new HashMap<>();
-	private static final LinkedList<NodeFx> jointsFx = new LinkedList<>();
-	private static Map<String,JointFx> jointsMap = new LinkedHashMap();
-	private static List<String> jointNamesList = new ArrayList<>();
-	private static Parent rootNodeSuprime;
+	 float timeQuantum = 1f;
+	private  final LinkedList<SceneFx> scenesFx = new LinkedList<>();
+	private  final LinkedList<NodeFx> nodesFx = new LinkedList<>();
+	private  final Map<String, NodeFx> nodesFxMap = new HashMap();
+	private final  Map<String, Timeline> timelines = new HashMap<>();
+	private  final LinkedList<NodeFx> jointsFx = new LinkedList<>();
+	private  Map<String,JointFx> jointsMap = new LinkedHashMap();
+	private  List<String> jointNamesList = new ArrayList<>();
+	private  Parent rootNodeSuprime;
 
-	private static final NodeFx modelNode = new NodeFx("1", "CONTROLLER", "CONTROLLER");
+	private  final NodeFx modelNode = new NodeFx("1", "CONTROLLER", "CONTROLLER");
 
-	private static List<TriangleMesh> meshesList = new LinkedList<>();
+	private  List<TriangleMesh> meshesList = new LinkedList<>();
 
-	private static int countMesh;
-	private static int countJoint;
+	private  int countMesh;
+	private  int countJoint;
 	
 	
-	public static SceneFx loadAnimGameItem(String resourcePath, String texturesDir) throws Exception {
+	public  SceneFx loadAnimGameItem(String resourcePath, String texturesDir) throws Exception {
 		return loadAnimGameItem(resourcePath, texturesDir, aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices
 				| aiProcess_Triangulate | aiProcess_FixInfacingNormals | aiProcess_LimitBoneWeights);
 	}
 
-	public static SceneFx loadAnimGameItem(String resourcePath, String texturesDir, int flags) throws Exception {
+	public  SceneFx loadAnimGameItem(String resourcePath, String texturesDir, int flags) throws Exception {
 		final Map<String, List<TriangleMesh>> meshesMap = new LinkedHashMap();
 		
 		AIScene aiScene = aiImportFile(resourcePath, flags);
@@ -187,7 +187,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return rootNodeFx;
 	}
 
-	private static MeshFx processMesh(
+	private MeshFx processMesh(
 			AIMesh aiMesh, 
 			AINode aiRootNode,
 			List<MaterialFx> materials, 
@@ -211,13 +211,13 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 				jointsPointsWeigth, currentMeshJoints, currentJoint);
 		
 		MeshFx mesh = new MeshFx(
-				Utils.listToArray(points),
-				Utils.listToArray(normals),
-				Utils.listToArray(texCoords),
-				Utils.listIntToArray(faces), 
+				listToArray(points),
+				listToArray(normals),
+				listToArray(texCoords),
+				listIntToArray(faces), 
 				jointsPointsWeigth.get(0),
 				adaptedMatrix(toMatrix(aiRootNode.mTransformation())),
-				Utils.listAffineToArray(bindPosList),
+				listAffineToArray(bindPosList),
 				currentMeshJoints);
 			
 		MaterialFx material;
@@ -231,8 +231,8 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return mesh;
 	}
 
-	@SuppressWarnings("static-access")
-	private static Parent getParent(NodeFx rootNode, Map<String, JointFx> jointsMap) {
+	@SuppressWarnings("-access")
+	private Parent getParent(NodeFx rootNode, Map<String, JointFx> jointsMap) {
 		NodeFx job = findOrigin(rootNode);
 		if ( job != null ) {
 			rootNode = rootineHierarchy(job);
@@ -242,7 +242,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return parent;
 	}
 
-	private static NodeFx findOrigin(NodeFx node) {
+	private  NodeFx findOrigin(NodeFx node) {
 		if (node.hasJoints()) { 
 			return node;
 		} else {
@@ -254,7 +254,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return null;
 	}
 	
-	private static NodeFx rootineHierarchy(NodeFx node) {
+	private  NodeFx rootineHierarchy(NodeFx node) {
 		List<Node> nodes = node.getChildren().stream().filter(v -> !((NodeFx)v).isJoint()).collect(Collectors.toList());
 		nodes.forEach(v -> node.getChildren().remove(v));
 		for (Node item : node.getChildren())
@@ -262,7 +262,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return node;
 	}
 	
-	private static void processJoints(
+	private  void processJoints(
 		AIMesh aiMesh, 
 		Map<String, JointFx> jointsMap,
 		List<String> jointNamesList,
@@ -350,7 +350,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		jointsPointsWeigth.add(jointsPointsWeigthBuff);
 }
 	
-	private static void buildTransFormationMatrices(AINodeAnim aiNodeAnim, NodeFx node) {
+	private  void buildTransFormationMatrices(AINodeAnim aiNodeAnim, NodeFx node) {
 		int numFrames = aiNodeAnim.mNumPositionKeys();
 		AIVectorKey.Buffer positionKeys = aiNodeAnim.mPositionKeys();
 		AIVectorKey.Buffer scalingKeys = aiNodeAnim.mScalingKeys();
@@ -413,7 +413,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		node.setTimeOfFrames(timeOfFramesFloat);
 	}
 	
-	private static List<AnimatedFrame> buildAnimationFrames(Map<String, JointFx> jointsMap, NodeFx rootNode) {
+	private  List<AnimatedFrame> buildAnimationFrames(Map<String, JointFx> jointsMap, NodeFx rootNode) {
 
 		List<AnimatedFrame> frameList = new ArrayList<>();
 		int numBones = jointsMap.size();
@@ -435,7 +435,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return frameList;
 	}
 
-	private static Map<String, JointFx> createJointsMap(AIScene aiScene, Map<String, JointFx> outJoint) {
+	private  Map<String, JointFx> createJointsMap(AIScene aiScene, Map<String, JointFx> outJoint) {
 
 		int numAnimations = aiScene.mNumAnimations();
 		PointerBuffer aiAnimations = aiScene.mAnimations();
@@ -455,7 +455,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return outJoint;
 	}
 	
-	private static Map<String, Animation> processAnimations(
+	private  Map<String, Animation> processAnimations(
 			AIScene aiScene, 
 			Map<String, JointFx> jointsMap,
 			NodeFx rootNode) {
@@ -486,7 +486,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return animations;
 	}
 
-	private static NodeFx processNodesHierarchy(AINode aiNode, NodeFx parentNode) {
+	private  NodeFx processNodesHierarchy(AINode aiNode, NodeFx parentNode) {
 		if (aiNode == null)
 			return null;
 
@@ -516,15 +516,15 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return nodeFx;
 	}
 
-	public static LinkedList<SceneFx> getScenesfx() {
+	public  LinkedList<SceneFx> getScenesfx() {
 		return scenesFx;
 	}
 
-	public static LinkedList<NodeFx> getNodesfx() {
+	public  LinkedList<NodeFx> getNodesfx() {
 		return nodesFx;
 	}
 
-	public static NodeFx getModelNode() {
+	public  NodeFx getModelNode() {
 		return modelNode;
 	}
 
@@ -532,11 +532,11 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return timelines;
 	}
 	
-	public static float getTimeQuantum() {
+	public  float getTimeQuantum() {
 		return timeQuantum;
 	}
 
-	public static Map<String, List<KeyFrame>> getKeyFramesMap(Map<String, JointFx> jointsMap, Skeleton skeleton) {
+	public  Map<String, List<KeyFrame>> getKeyFramesMap(Map<String, JointFx> jointsMap, Skeleton skeleton) {
 		final Map<String, List<KeyFrame>> frames = new HashMap<>();
 
 		jointsMap.entrySet().stream().map((map) -> {
@@ -553,7 +553,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		return frames;
 	}
 
-	public static void buildTimelines(Map<String, JointFx> jointsMap, Skeleton skeleton) {
+	public  void buildTimelines(Map<String, JointFx> jointsMap, Skeleton skeleton) {
 		getKeyFramesMap(jointsMap, skeleton).forEach((key, value) -> {
 			if (!timelines.containsKey(key)) {
 				timelines.put(key, new Timeline());

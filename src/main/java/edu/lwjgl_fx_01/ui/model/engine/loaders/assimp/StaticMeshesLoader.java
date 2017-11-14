@@ -47,13 +47,13 @@ public class StaticMeshesLoader {
 	
 	//public static List<String> bonesNames = new ArrayList<>();
 	
-    public static SceneFx load(String resourcePath, String texturesDir) throws Exception {
+    public SceneFx load(String resourcePath, String texturesDir) throws Exception {
         return load(resourcePath, texturesDir,
                 aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate
                         | aiProcess_FixInfacingNormals);
     }
 
-    public static SceneFx load(String resourcePath, String texturesDir, int flags) throws Exception {
+    public SceneFx load(String resourcePath, String texturesDir, int flags) throws Exception {
         AIScene aiScene = aiImportFile(resourcePath, flags);
         if (aiScene == null) {
             throw new Exception("Error loading model");
@@ -82,7 +82,7 @@ public class StaticMeshesLoader {
         return mainScene;
     }
 
-    protected static void processIndices(AIMesh aiMesh, List<Integer> indices) {
+    protected void processIndices(AIMesh aiMesh, List<Integer> indices) {
         int numFaces = aiMesh.mNumFaces();
         AIFace.Buffer aiFaces = aiMesh.mFaces();
         for (int i = 0; i < numFaces; i++) {
@@ -95,7 +95,7 @@ public class StaticMeshesLoader {
     }
 
     @SuppressWarnings({ "restriction", "null" })
-	protected static void processMaterial(AIMaterial aiMaterial, List<MaterialFx> materials,
+	protected void processMaterial(AIMaterial aiMaterial, List<MaterialFx> materials,
             String texturesDir) throws Exception {
         AIColor4D colour = AIColor4D.create();
 
@@ -138,7 +138,7 @@ public class StaticMeshesLoader {
         materials.add(material);
     }
 
-    private static MeshFx processMesh(AIMesh aiMesh, List<MaterialFx> materials) {
+    private MeshFx processMesh(AIMesh aiMesh, List<MaterialFx> materials) {
         List<Float> points = new ArrayList<>();
         List<Float> textures = new ArrayList<>();
         List<Float> normals = new ArrayList<>();
@@ -165,7 +165,7 @@ public class StaticMeshesLoader {
         return mesh;
     }
 
-    protected static void processNormals(AIMesh aiMesh, List<Float> normals) {
+    protected void processNormals(AIMesh aiMesh, List<Float> normals) {
         AIVector3D.Buffer aiNormals = aiMesh.mNormals();
         while (aiNormals != null && aiNormals.remaining() > 0) {
             AIVector3D aiNormal = aiNormals.get();
@@ -175,7 +175,7 @@ public class StaticMeshesLoader {
         }
     }
 
-    protected static void processTextCoords(AIMesh aiMesh, List<Float> textures) {
+    protected void processTextCoords(AIMesh aiMesh, List<Float> textures) {
         AIVector3D.Buffer textCoords = aiMesh.mTextureCoords(0);
         int numTextCoords = textCoords != null ? textCoords.remaining() : 0;
         for (int i = 0; i < numTextCoords; i++) {
@@ -185,7 +185,7 @@ public class StaticMeshesLoader {
         }
     }
 
-    protected static void processVertices(AIMesh aiMesh, List<Float> vertices) {
+    protected void processVertices(AIMesh aiMesh, List<Float> vertices) {
         AIVector3D.Buffer aiVertices = aiMesh.mVertices();
         while (aiVertices.remaining() > 0) {
             AIVector3D aiVertex = aiVertices.get();
@@ -195,7 +195,7 @@ public class StaticMeshesLoader {
         }
     }
     
-    public static class TypeList {
+    public class TypeList {
     	public int GroupId;
     	public String groupName;
     	public List<String> types = new ArrayList<>();

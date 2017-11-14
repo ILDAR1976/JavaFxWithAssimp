@@ -64,6 +64,7 @@ public class MainFx3D extends Application {
 	private Stage stage;
 	final static Logger logger = LogManager.getLogger(MainFx3D.class);
 	private AssimpLoader assimpLoader;
+	private AssimpLoader assimpLoader2;
 	private final PerspectiveCamera camera = new PerspectiveCamera(true);
 	private final Rotate cameraXRotate = new Rotate(-30, 0, 0, 0, Rotate.X_AXIS);
 	// private final Rotate cameraXRotate = new Rotate(0,0,0,0,Rotate.X_AXIS);
@@ -86,17 +87,19 @@ public class MainFx3D extends Application {
 	public Rotate yRotate;
 
 	public SceneFx loadedScene;
+	public SceneFx figure2;
 
 
 	// visualization bones
 	
 
 	public List<KeyFrame> keyFrames = new ArrayList<>();
+	public List<KeyFrame> keyFrames2 = new ArrayList<>();
 	
 	public NodeFx model;
 
-	public Map<Integer,List<Affine>> affineKeyFramesOnBone;
-	public Map<JointFx,List<Affine>> affineKeyFramesOnJoint;
+	//public Map<Integer,List<Affine>> affineKeyFramesOnBone;
+	//public Map<JointFx,List<Affine>> affineKeyFramesOnJoint;
 	
 	private double scenex, sceney = 0;
 	private final DoubleProperty angleX = new SimpleDoubleProperty(0);
@@ -127,7 +130,9 @@ public class MainFx3D extends Application {
 
 		assimpLoader = new AssimpLoader("./models/boblamp.md5mesh");
 		//assimpLoader = new AssimpLoader("./models/monster.md5mesh");
-		loadedScene = assimpLoader.getScene();
+		//loadedScene = assimpLoader.getScene();
+
+		assimpLoader2 = new AssimpLoader("./models/monster.md5mesh");
 
 	}
 
@@ -139,7 +144,7 @@ public class MainFx3D extends Application {
 
 		
 		getParameters().getRaw();
-		Scene scene = new Scene(root3D, 600, 600, true);
+		Scene scene = new Scene(root3D, 1376, 768, true);
 		final Scene scene2 = new Scene(grp, 200, 440, true);
 
 		Stage myDialog = new Stage();
@@ -162,7 +167,6 @@ public class MainFx3D extends Application {
 				cameraLookZRotate);
 		camera.setNearClip(0.1);
 		camera.setFarClip(1000);
-		//camera.setTranslateZ(-80);
 
 		scene.setCamera(camera);
 
@@ -170,17 +174,17 @@ public class MainFx3D extends Application {
 				     anchorAngleX, anchorAngleY, scenex, sceney);
 
 		ihaScene = assimpLoader.getScene();
-		Animation na = ihaScene.getAnimations().get("");
+		figure2 = assimpLoader2.getScene();
+		ihaScene.setTranslateX(-70);
 
 		Group figure = new Group();
 		Group meshes = new Group();
-		//model = assimpLoader.getModelScene();
-
 		Group test = new Group();
-
+		
+		
 		switch (0) {
 		case 0:
-			root3D.getChildren().addAll(ihaScene); 
+			root3D.getChildren().addAll(ihaScene, figure2); 
 			break;
 		case 1:	
 			root3D.getChildren().addAll(meshes);
@@ -192,18 +196,22 @@ public class MainFx3D extends Application {
 		}
 		
 		final Timeline timeline = new Timeline();
-		timeline.getKeyFrames().addAll(keyFrames);
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		assimpLoader.getTimelines().values().forEach(tl -> timeline.getKeyFrames().addAll(tl.getKeyFrames()));
 		timeline.play();
+
+		final Timeline timeline2 = new Timeline();
+		timeline2.setCycleCount(Timeline.INDEFINITE);
+		assimpLoader2.getTimelines().values().forEach(tl -> timeline2.getKeyFrames().addAll(tl.getKeyFrames()));
+		timeline2.play();
 
 		stage.setScene(scene);
 		stage.setOnCloseRequest(event -> myDialog.close());
 		stage.show();
 		
 		GLSlider trX = new GLSlider(10d, 60d, "Translate X:", -1000d, 1000d, 2.7d);
-		GLSlider trY = new GLSlider(10d, 100d, "Translate Y:", -1000d, 1000d, -124.3d);
-		GLSlider trZ = new GLSlider(10d, 140d, "Translate Z:", -1000d, 1000d, -201d);
+		GLSlider trY = new GLSlider(10d, 100d, "Translate Y:", -1000d, 1000d, -219d);
+		GLSlider trZ = new GLSlider(10d, 140d, "Translate Z:", -1000d, 1000d, -301d);
 		GLSlider scl = new GLSlider(10d, 180d, "Scale figure:", 0d, 1.5d, 1.0d);
 		GLSlider dur = new GLSlider(10d, 220d, "Timeline position:  ", 0d, timeline.getCycleDuration().toMillis(), 0d);
 		GLSlider tq = new GLSlider(10d, 260d, "Time quatum:   ", 0d, 200d, 25d);
@@ -221,6 +229,7 @@ public class MainFx3D extends Application {
 		camera.translateZProperty().bind(trZ.getValue());
 		
 		timeline.rateProperty().bind(tq.getValue());
+		timeline2.rateProperty().bind(tq.getValue());
 
 		figure.scaleXProperty().bind(scl.getValue());
 		figure.scaleYProperty().bind(scl.getValue());
@@ -231,8 +240,6 @@ public class MainFx3D extends Application {
 		meshes.scaleZProperty().bind(scl.getValue());
 
 		dur.getValue().addListener((e, o, n) -> {
-			//timeline.pause();
-			
 			timeline.jumpTo(Duration.millis(n.doubleValue()));
 		});
 
