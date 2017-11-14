@@ -24,7 +24,7 @@ public class FontTexture {
 
     private final Map<Character, CharInfo> charMap;
 
-    private LwjglTexture texture;
+    private TextureFx texture;
 
     private int height;
 
@@ -46,7 +46,7 @@ public class FontTexture {
         return height;
     }
 
-    public LwjglTexture getTexture() {
+    public TextureFx getTexture() {
         return texture;
     }
 
@@ -99,7 +99,7 @@ public class FontTexture {
             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             ImageIO.write(img, IMAGE_FORMAT, out);
             out.flush();
-            texture = new LwjglTexture(ByteBuffer.wrap(out.toByteArray()));
+            texture = new TextureFx(ByteBuffer.wrap(out.toByteArray()));
         }
     }
 

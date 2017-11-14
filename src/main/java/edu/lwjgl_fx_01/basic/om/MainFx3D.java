@@ -125,8 +125,8 @@ public class MainFx3D extends Application {
 
 	public MainFx3D() throws Exception {
 
-		//assimpLoader = new AssimpLoader("./models/boblamp.md5mesh");
-		assimpLoader = new AssimpLoader("./models/monster.md5mesh");
+		assimpLoader = new AssimpLoader("./models/boblamp.md5mesh");
+		//assimpLoader = new AssimpLoader("./models/monster.md5mesh");
 		loadedScene = assimpLoader.getScene();
 
 	}

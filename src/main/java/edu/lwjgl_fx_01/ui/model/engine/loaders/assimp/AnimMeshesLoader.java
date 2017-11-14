@@ -49,7 +49,7 @@ import com.google.common.primitives.Floats;
 import edu.lwjgl_fx_01.ui.utils.Utils;
 import edu.lwjgl_fx_01.ui.model.engine.SceneFx;
 import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
-import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMaterial;
+import edu.lwjgl_fx_01.ui.model.engine.graph.MaterialFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.MeshFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
@@ -111,7 +111,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		
 		int numMaterials = aiScene.mNumMaterials();
 		PointerBuffer aiMaterials = aiScene.mMaterials();
-		List<LwjglMaterial> materials = new ArrayList<>();
+		List<MaterialFx> materials = new ArrayList<>();
 		for (int i = 0; i < numMaterials; i++) {
 			AIMaterial aiMaterial = AIMaterial.create(aiMaterials.get(i));
 			processMaterial(aiMaterial, materials, texturesDir);
@@ -166,16 +166,14 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 				}
 			});
 
-			/*if (i < materials.size()) {
-				meshView.setMaterial(materials.get(i));
-			} else {*/
-			PhongMaterial material = new PhongMaterial(Color.BURLYWOOD);
-
-			meshView.setMaterial(material);
-
-			meshView.setDrawMode(DrawMode.FILL);
-			meshView.setCullFace(CullFace.BACK);
-			//}
+			if (i < materials.size()) {
+				meshView.setMaterial(materials.get(i).getPhongMaterial());
+			} else {
+				PhongMaterial material = new PhongMaterial(Color.BURLYWOOD);
+				meshView.setMaterial(material);
+				meshView.setDrawMode(DrawMode.FILL);
+				meshView.setCullFace(CullFace.BACK);
+			}
 
 			meshes[i].getChildren().add(meshView);
 		}
@@ -192,7 +190,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 	private static MeshFx processMesh(
 			AIMesh aiMesh, 
 			AINode aiRootNode,
-			List<LwjglMaterial> materials, 
+			List<MaterialFx> materials, 
 			Map<String,JointFx> jointsMap,
 			int meshId) {
 		List<Float> points = new ArrayList<>();
@@ -222,13 +220,13 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 				Utils.listAffineToArray(bindPosList),
 				currentMeshJoints);
 			
-		LwjglMaterial material;
+		MaterialFx material;
 		
 		int materialIdx = aiMesh.mMaterialIndex();
 		if (materialIdx >= 0 && materialIdx < materials.size()) {
 			material = materials.get(materialIdx);
 		} else {
-			material = new LwjglMaterial();
+			material = new MaterialFx();
 		}
 		return mesh;
 	}
@@ -425,24 +423,11 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 		for (int i = 0; i < numFrames; i++) {
 			AnimatedFrame frame = new AnimatedFrame();
 			frameList.add(frame);
-
-/*
-  			for (int j = 0; j < numBones; j++) {
-				JointFx joint = jointList.get(j);
-				NodeFx node = rootNode.findByName(joint.getId());
-
-				Affine boneMatrix = node.getTransformations().get(i);
-
-				frame.setMatrix(j, boneMatrix);
-			}
-*/
 			int j = 0;
   			for (Map.Entry<String, JointFx> item : jointsMap.entrySet()) {
 				JointFx joint = item.getValue();
 				NodeFx node = rootNode.findByNameWithRootNode(joint.getId().trim().toLowerCase(), (NodeFx)rootNodeSuprime);
-
 				Affine boneMatrix = node.getTransformations().get(i);
-
 				frame.setMatrix(j++, boneMatrix);
 			}
 		}
@@ -485,7 +470,7 @@ public class AnimMeshesLoader extends StaticMeshesLoader {
 			// Calculate transformation matrices for each node
 			int numChanels = aiAnimation.mNumChannels();
 			PointerBuffer aiChannels = aiAnimation.mChannels();
-			for (int j = 1; j < numChanels; j++) {
+			for (int j = 0; j < numChanels; j++) {
 				AINodeAnim aiNodeAnim = AINodeAnim.create(aiChannels.get(j));
 				String nodeName = aiNodeAnim.mNodeName().dataString().trim().toLowerCase();
 				NodeFx node = rootNode.findByName(nodeName);

@@ -2,13 +2,13 @@ package edu.lwjgl_fx_01.ui.model.engine.loaders.assimp;
 
 import java.util.HashMap;
 import java.util.Map;
-import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglTexture;
+import edu.lwjgl_fx_01.ui.model.engine.graph.TextureFx;
 
 public class TextureCache {
 
     private static TextureCache INSTANCE;
 
-    private Map<String, LwjglTexture> texturesMap;
+    private Map<String, TextureFx> texturesMap;
     
     private TextureCache() {
         texturesMap = new HashMap<>();
@@ -21,10 +21,10 @@ public class TextureCache {
         return INSTANCE;
     }
     
-    public LwjglTexture getTexture(String path) throws Exception {
-        LwjglTexture texture = texturesMap.get(path);
+    public TextureFx getTexture(String path) throws Exception {
+        TextureFx texture = texturesMap.get(path);
         if ( texture == null ) {
-            texture = new LwjglTexture(path);
+            texture = new TextureFx(path);
             texturesMap.put(path, texture);
         }
         return texture;

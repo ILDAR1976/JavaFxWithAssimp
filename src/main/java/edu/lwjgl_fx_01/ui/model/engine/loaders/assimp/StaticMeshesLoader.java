@@ -12,6 +12,7 @@ import static org.lwjgl.assimp.Assimp.aiProcess_Triangulate;
 import static org.lwjgl.assimp.Assimp.aiTextureType_DIFFUSE;
 import static org.lwjgl.assimp.Assimp.aiTextureType_NONE;
 
+import java.io.File;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,12 +33,13 @@ import org.lwjgl.assimp.AIString;
 import org.lwjgl.assimp.AIVector3D;
 import org.lwjgl.assimp.Assimp;
 import edu.lwjgl_fx_01.ui.utils.Utils;
+import javafx.scene.image.Image;
 import javafx.scene.transform.Affine;
 
 import edu.lwjgl_fx_01.ui.model.engine.SceneFx;
-import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglMaterial;
+import edu.lwjgl_fx_01.ui.model.engine.graph.MaterialFx;
 import edu.lwjgl_fx_01.ui.model.engine.shape3d.SkinningMesh;
-import edu.lwjgl_fx_01.ui.model.engine.graph.LwjglTexture;
+import edu.lwjgl_fx_01.ui.model.engine.graph.TextureFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.MeshFx;
 import edu.lwjgl_fx_01.ui.model.engine.graph.NodeFx;
 
@@ -59,7 +61,7 @@ public class StaticMeshesLoader {
 
         int numMaterials = aiScene.mNumMaterials();
         PointerBuffer aiMaterials = aiScene.mMaterials();
-        List<LwjglMaterial> materials = new ArrayList<>();
+        List<MaterialFx> materials = new ArrayList<>();
         for (int i = 0; i < numMaterials; i++) {
             AIMaterial aiMaterial = AIMaterial.create(aiMaterials.get(i));
             processMaterial(aiMaterial, materials, texturesDir);
@@ -92,7 +94,8 @@ public class StaticMeshesLoader {
         }
     }
 
-    protected static void processMaterial(AIMaterial aiMaterial, List<LwjglMaterial> materials,
+    @SuppressWarnings({ "restriction", "null" })
+	protected static void processMaterial(AIMaterial aiMaterial, List<MaterialFx> materials,
             String texturesDir) throws Exception {
         AIColor4D colour = AIColor4D.create();
 
@@ -100,41 +103,42 @@ public class StaticMeshesLoader {
         Assimp.aiGetMaterialTexture(aiMaterial, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null,
                 null, null, null, null, null);
         String textPath = path.dataString();
-        LwjglTexture texture = null;
+        TextureFx texture = null;
         if (textPath != null && textPath.length() > 0) {
             TextureCache textCache = TextureCache.getInstance();
             String textureFile = texturesDir + "/" + textPath;
             textureFile = textureFile.replace("//", "/");
-            texture = textCache.getTexture(textureFile);
+            texture = new TextureFx(0, 0, 0);
+            texture.setImage(new javafx.scene.image.Image((new File(textureFile)).toURI().toString()));
         }
 
-        Vector4f ambient = LwjglMaterial.DEFAULT_COLOUR;
+        Vector4f ambient = MaterialFx.DEFAULT_COLOUR;
         int result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_AMBIENT, aiTextureType_NONE, 0,
                 colour);
         if (result == 0) {
             ambient = new Vector4f(colour.r(), colour.g(), colour.b(), colour.a());
         }
 
-        Vector4f diffuse = LwjglMaterial.DEFAULT_COLOUR;
+        Vector4f diffuse = MaterialFx.DEFAULT_COLOUR;
         result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0,
                 colour);
         if (result == 0) {
             diffuse = new Vector4f(colour.r(), colour.g(), colour.b(), colour.a());
         }
 
-        Vector4f specular = LwjglMaterial.DEFAULT_COLOUR;
+        Vector4f specular = MaterialFx.DEFAULT_COLOUR;
         result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_SPECULAR, aiTextureType_NONE, 0,
                 colour);
         if (result == 0) {
             specular = new Vector4f(colour.r(), colour.g(), colour.b(), colour.a());
         }
 
-        LwjglMaterial material = new LwjglMaterial(ambient, diffuse, specular, 1.0f);
-        material.setTexture(texture);
+        MaterialFx material = new MaterialFx(ambient, diffuse, specular, texture, 1.0f);
+       
         materials.add(material);
     }
 
-    private static MeshFx processMesh(AIMesh aiMesh, List<LwjglMaterial> materials) {
+    private static MeshFx processMesh(AIMesh aiMesh, List<MaterialFx> materials) {
         List<Float> points = new ArrayList<>();
         List<Float> textures = new ArrayList<>();
         List<Float> normals = new ArrayList<>();

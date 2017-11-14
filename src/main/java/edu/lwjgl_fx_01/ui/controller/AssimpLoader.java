@@ -98,11 +98,11 @@ public class AssimpLoader {
     
     @SuppressWarnings("static-access")
 	void loadAnimationModel(String fileName) throws Exception {
-		scene = animationModel.loadAnimGameItem(fileName, "");
+		scene = animationModel.loadAnimGameItem(fileName, "./models");
     }
 
 	void loadModel(String fileName) throws Exception {
-    	scene = staticModel.load(fileName, "");
+    	scene = staticModel.load(fileName, "./models");
     }
 	
 	public SceneFx getScene() {
